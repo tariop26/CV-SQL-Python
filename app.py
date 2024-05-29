@@ -336,7 +336,7 @@ if role:
         radar_fig.update_layout(
             polar=dict(
                 radialaxis=dict(
-                    visible=True,
+                    visible=False,
                     range=[0, 100],
                     showticklabels=False
                 ),

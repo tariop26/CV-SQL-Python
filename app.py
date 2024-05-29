@@ -24,6 +24,30 @@ def add_skill(skill_name, proficiency):
     conn.close()
     st.success(f"Skill '{skill_name}' added successfully.")
 
+# Fonction pour ajouter une expérience
+def add_experience(company, job_title, start_date, end_date, description):
+    conn = sqlite3.connect('cv_database.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO experience (company, job_title, start_date, end_date, description)
+        VALUES (?, ?, ?, ?, ?)
+    """, (company, job_title, start_date, end_date, description))
+    conn.commit()
+    conn.close()
+    st.success(f"Experience '{job_title} at {company}' added successfully.")
+
+# Fonction pour ajouter une formation
+def add_education(institution, degree, start_date, end_date, description):
+    conn = sqlite3.connect('cv_database.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO education (institution, degree, start_date, end_date, description)
+        VALUES (?, ?, ?, ?, ?)
+    """, (institution, degree, start_date, end_date, description))
+    conn.commit()
+    conn.close()
+    st.success(f"Education '{degree} at {institution}' added successfully.")
+
 # Fonction pour ajouter une compétence à une expérience ou une formation
 def add_skill_to_item(item_id, skill_name, item_type):
     conn = sqlite3.connect('cv_database.db')
@@ -64,14 +88,41 @@ if role:
     if role == "admin":
         st.header('Admin Interface')
 
-        st.subheader('Ajouter une Expérience')
-        company = st.text_input('Entreprise')
-        job_title = st.text_input('Titre du poste')
-        start_date = st.date_input('Date de début')
-        end_date = st.date_input('Date de fin')
-        description = st.text_area('Description')
-        if st.button('Ajouter Expérience'):
-            add_experience(company, job_title, str(start_date), str(end_date), description)
+        st.header('Expériences')
+        experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")
+        experience_data['skills'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
+        experience_data = experience_data.drop(columns=['id'])  # Supprimer la colonne id
+        st.write(experience_data)
+
+        st.header('Formations')
+        education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date FROM education")
+        education_data['skills'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
+        education_data = education_data.drop(columns=['id'])  # Supprimer la colonne id
+        st.write(education_data)
+
+        st.header('Compétences')
+        skills_data = fetch_data("SELECT * FROM skills")
+        st.write(skills_data)
+
+        st.subheader('Ajouter une Formation ou une Expérience')
+        add_type = st.selectbox('Type à ajouter', ['Formation', 'Expérience'])
+
+        if add_type == 'Expérience':
+            company = st.text_input('Entreprise')
+            job_title = st.text_input('Titre du poste')
+            start_date = st.date_input('Date de début')
+            end_date = st.date_input('Date de fin')
+            description = st.text_area('Description')
+            if st.button('Ajouter Expérience'):
+                add_experience(company, job_title, str(start_date), str(end_date), description)
+        elif add_type == 'Formation':
+            institution = st.text_input('Institution')
+            degree = st.text_input('Diplôme')
+            start_date = st.date_input('Date de début')
+            end_date = st.date_input('Date de fin')
+            description = st.text_area('Description')
+            if st.button('Ajouter Formation'):
+                add_education(institution, degree, str(start_date), str(end_date), description)
 
         st.subheader('Mettre à Jour une Expérience')
         exp_id = st.number_input('ID de l\'expérience', min_value=1, step=1)
@@ -98,22 +149,9 @@ if role:
         if st.button('Ajouter Compétence'):
             add_skill(new_skill_name, new_proficiency)
 
-        st.header('Expériences')
-        experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")
-        experience_data['skills'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
-        st.write(experience_data)
-
-        st.header('Formations')
-        education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date FROM education")
-        education_data['skills'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
-        st.write(education_data)
-
-        st.header('Compétences')
-        skills_data = fetch_data("SELECT * FROM skills")
-        st.write(skills_data)
-
     # Frise chronologique pour les utilisateurs
     if role == "user":
+        st.markdown("[Télécharger mon CV au format PDF](https://tariop26.github.io/)")
         st.header('Frise Chronologique des Expériences et Formations')
 
         # Récupérer les expériences
@@ -167,22 +205,18 @@ if role:
         st.header('Expériences')
         experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")
         experience_data['skills'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
+        experience_data = experience_data.drop(columns=['id'])  # Supprimer la colonne id
         st.write(experience_data)
 
         st.header('Formations')
         education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date FROM education")
         education_data['skills'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
+        education_data = education_data.drop(columns=['id'])  # Supprimer la colonne id
         st.write(education_data)
 
         st.header('Compétences')
         skills_data = fetch_data("SELECT * FROM skills")
         st.write(skills_data)
 
-        st.header('Ajouter une Compétence à une Expérience ou une Formation')
-        item_id = st.number_input('ID de l\'expérience ou de la formation', min_value=1, step=1)
-        skill_name = st.text_input('Nom de la compétence à ajouter')
-        item_type = st.selectbox('Type d\'élément', ('experience', 'education'))
-        if st.button('Ajouter Compétence'):
-            add_skill_to_item(item_id, skill_name, item_type)
 else:
     st.error("Nom d'utilisateur ou mot de passe incorrect")

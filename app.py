@@ -13,25 +13,25 @@ def fetch_data(query):
     return data
 
 # Fonction pour ajouter une expérience
-def add_experience(company, job_title, start_date, end_date, description):
+def add_experience(company, job_title, start_date, end_date, description, skills):
     conn = sqlite3.connect('cv_database.db')
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO experience (company, job_title, start_date, end_date, description)
-        VALUES (?, ?, ?, ?, ?)
-    """, (company, job_title, start_date, end_date, description))
+        INSERT INTO experience (company, job_title, start_date, end_date, description, skills)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (company, job_title, start_date, end_date, description, skills))
     conn.commit()
     conn.close()
     st.success(f"Expérience '{job_title}' ajoutée avec succès.")
 
 # Fonction pour ajouter une formation
-def add_education(institution, degree, start_date, end_date, description):
+def add_education(institution, degree, start_date, end_date, description, skills):
     conn = sqlite3.connect('cv_database.db')
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO education (institution, degree, start_date, end_date, description)
-        VALUES (?, ?, ?, ?, ?)
-    """, (institution, degree, start_date, end_date, description))
+        INSERT INTO education (institution, degree, start_date, end_date, description, skills)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (institution, degree, start_date, end_date, description, skills))
     conn.commit()
     conn.close()
     st.success(f"Formation '{degree}' ajoutée avec succès.")
@@ -77,22 +77,28 @@ if role:
         st.subheader('Ajouter une Entrée')
         add_option = st.selectbox('Choisir l\'option à ajouter', ('Expérience', 'Formation'))
 
+        # Sélection des compétences
+        skills = fetch_data("SELECT skill_name FROM skills")
+        skills_list = skills['skill_name'].tolist()
+
         if add_option == 'Expérience':
             company = st.text_input('Entreprise')
             job_title = st.text_input('Titre du poste')
             start_date = st.date_input('Date de début')
             end_date = st.date_input('Date de fin')
             description = st.text_area('Description')
+            selected_skills = st.multiselect('Compétences utilisées', skills_list)
             if st.button('Ajouter Expérience'):
-                add_experience(company, job_title, str(start_date), str(end_date), description)
+                add_experience(company, job_title, str(start_date), str(end_date), description, ', '.join(selected_skills))
         elif add_option == 'Formation':
             institution = st.text_input('Institution')
             degree = st.text_input('Diplôme')
             start_date = st.date_input('Date de début')
             end_date = st.date_input('Date de fin')
             description = st.text_area('Description')
+            selected_skills = st.multiselect('Compétences utilisées', skills_list)
             if st.button('Ajouter Formation'):
-                add_education(institution, degree, str(start_date), str(end_date), description)
+                add_education(institution, degree, str(start_date), str(end_date), description, ', '.join(selected_skills))
 
         st.subheader('Mettre à Jour une Expérience')
         exp_id = st.number_input('ID de l\'expérience', min_value=1, step=1)

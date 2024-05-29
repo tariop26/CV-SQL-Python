@@ -4,6 +4,14 @@ import sqlite3
 conn = sqlite3.connect('cv_database.db')
 cursor = conn.cursor()
 
+# Supprimer toutes les données des tables
+cursor.execute("DELETE FROM education_skills")
+cursor.execute("DELETE FROM experience_skills")
+cursor.execute("DELETE FROM education")
+cursor.execute("DELETE FROM experience")
+cursor.execute("DELETE FROM skills")
+conn.commit()
+
 # Fonction pour calculer la proficiency
 def calculate_proficiency(start_date):
     if start_date < '2019-01-01':

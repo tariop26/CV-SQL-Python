@@ -83,10 +83,31 @@ if role:
         timeline_data = pd.concat([experiences, educations], ignore_index=True)
         timeline_data['start_date'] = pd.to_datetime(timeline_data['start_date'])
         timeline_data['end_date'] = pd.to_datetime(timeline_data['end_date'])
+        timeline_data['label'] = timeline_data.apply(lambda row: f"{row['job_title']} at {row['company']}", axis=1)
 
         # Créer la frise chronologique avec Plotly
-        fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="job_title", color="type", title="Frise Chronologique des Expériences et Formations")
-        fig.update_layout(xaxis=dict(range=['2000-01-01', '2023-12-31']))
+        fig = px.timeline(
+            timeline_data, 
+            x_start="start_date", 
+            x_end="end_date", 
+            y="type", 
+            color="job_title", 
+            title="Frise Chronologique des Expériences et Formations",
+            text="label"
+        )
+
+        # Mettre à jour la disposition pour aligner les éléments à la même hauteur
+        fig.update_yaxes(categoryorder="total ascending", title="")
+        fig.update_layout(
+            xaxis=dict(range=['2000-01-01', pd.to_datetime('today')]),
+            yaxis=dict(title=""),
+            showlegend=False,
+            height=600
+        )
+
+        # Ajouter les titres des postes
+        fig.update_traces(textposition="inside", insidetextanchor="middle")
+
         st.plotly_chart(fig)
 
         st.header('Expériences')

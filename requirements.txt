@@ -3,5 +3,4 @@ Streamlit
 pandas
 matplotlib
 seaborn
-sqlite3
 SQLAlchemy

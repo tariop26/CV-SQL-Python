@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
 from auth import authenticate
 import random
@@ -92,18 +93,18 @@ if role:
         # Créer la frise chronologique avec Plotly
         fig = go.Figure()
 
-        for i, row in timeline_data.iterrows():
+        for _, row in timeline_data.iterrows():
             fig.add_trace(go.Bar(
                 x=[row['start_date'], row['end_date']],
-                y=[0, 0],
-                base=[0, 0],
-                width=0.2,  # Spécifiez une largeur fixe pour chaque barre
-                name=row['label'],
-                marker_color=row['color'],
-                opacity=row['opacity'],
-                hoverinfo='text',
+                y=[''],  # Single y-axis line
+                orientation='h',
+                width=0.4,
+                marker=dict(
+                    color=row['color'],
+                    opacity=row['opacity']
+                ),
                 text=row['label'],
-                textposition='inside'
+                hoverinfo='text'
             ))
 
         fig.update_layout(

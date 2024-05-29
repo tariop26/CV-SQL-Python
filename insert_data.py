@@ -4,6 +4,15 @@ import sqlite3
 conn = sqlite3.connect('cv_database.db')
 cursor = conn.cursor()
 
+# Fonction pour calculer la proficiency
+def calculate_proficiency(start_date):
+    if start_date < '2019-01-01':
+        return 4
+    elif start_date < '2022-01-01':
+        return 3
+    else:
+        return 2
+
 # Liste des expériences à insérer
 experiences = [
     {
@@ -87,6 +96,7 @@ for exp in experiences:
         VALUES (?, ?, ?, ?, ?)
     """, (exp['company'], exp['job_title'], exp['start_date'], exp['end_date'], exp['description']))
     exp_id = cursor.lastrowid
+    proficiency = calculate_proficiency(exp['start_date'])
     for skill in exp['skills']:
         cursor.execute("""
             INSERT INTO experience_skills (experience_id, skill_name)
@@ -95,7 +105,7 @@ for exp in experiences:
         cursor.execute("""
             INSERT OR IGNORE INTO skills (skill_name, proficiency)
             VALUES (?, ?)
-        """, (skill, 1))  # Proficiency par défaut à 1 si la compétence est nouvelle
+        """, (skill, proficiency))
 
 # Liste des formations à insérer
 formations = [
@@ -135,6 +145,7 @@ for edu in formations:
         VALUES (?, ?, ?, ?, ?, ?)
     """, (edu['institution'], edu['degree'], edu['field_of_study'], edu['start_date'], edu['end_date'], edu['description']))
     edu_id = cursor.lastrowid
+    proficiency = calculate_proficiency(edu['start_date'])
     for skill in edu['skills']:
         cursor.execute("""
             INSERT INTO education_skills (education_id, skill_name)
@@ -143,7 +154,7 @@ for edu in formations:
         cursor.execute("""
             INSERT OR IGNORE INTO skills (skill_name, proficiency)
             VALUES (?, ?)
-        """, (skill, 1))  # Proficiency par défaut à 1 si la compétence est nouvelle
+        """, (skill, proficiency))
 
 # Commit des modifications et fermer la connexion
 conn.commit()

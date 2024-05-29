@@ -12,52 +12,17 @@ def fetch_data(query):
     conn.close()
     return data
 
-# Fonction pour mettre à jour l'expérience professionnelle
-def update_experience(job_title, end_date, description, id):
+# Fonction pour ajouter une compétence à une expérience ou une formation
+def add_skill_to_item(item_id, skill_name, item_type):
     conn = sqlite3.connect('cv_database.db')
     cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE experience
-        SET job_title = ?, end_date = ?, description = ?
-        WHERE id = ?
-    """, (job_title, end_date, description, id))
+    cursor.execute(f"""
+        INSERT INTO {item_type}_skills ({item_type}_id, skill_name)
+        VALUES (?, ?)
+    """, (item_id, skill_name))
     conn.commit()
     conn.close()
-    st.success(f"Experience with id {id} updated successfully.")
-
-# Fonction pour mettre à jour une compétence
-def update_skill(proficiency, skill_name):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE skills
-        SET proficiency = ?
-        WHERE skill_name = ?
-    """, (proficiency, skill_name))
-    conn.commit()
-    conn.close()
-    st.success(f"Skill {skill_name} updated successfully.")
-
-# Fonction pour ajouter une expérience professionnelle
-def add_experience(company, job_title, start_date, end_date, description):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO experience (company, job_title, start_date, end_date, description)
-        VALUES (?, ?, ?, ?, ?)
-    """, (company, job_title, start_date, end_date, description))
-    conn.commit()
-    conn.close()
-    st.success(f"Experience at {company} added successfully.")
-
-# Fonction pour supprimer une expérience professionnelle
-def delete_experience(id):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM experience WHERE id = ?", (id,))
-    conn.commit()
-    conn.close()
-    st.success(f"Experience with id {id} deleted successfully.")
+    st.success(f"Skill '{skill_name}' added to {item_type} with id {item_id} successfully.")
 
 # Interface de connexion
 st.title('CV de Manuel Poirat - Visualisations et Requêtes SQL')
@@ -162,5 +127,26 @@ if role:
     plt.xlabel('Nombre de Projets')
     plt.ylabel('Compétence')
     st.pyplot(plt)
+
+    # Afficher les expériences, les formations et les compétences pour les utilisateurs
+    if role == "user":
+        st.header('Expériences')
+        experience_data = fetch_data("SELECT * FROM experience")
+        st.write(experience_data)
+
+        st.header('Formations')
+        education_data = fetch_data("SELECT * FROM education")
+        st.write(education_data)
+
+        st.header('Compétences')
+        skills_data = fetch_data("SELECT * FROM skills")
+        st.write(skills_data)
+
+        st.header('Ajouter une Compétence à une Expérience ou une Formation')
+        item_id = st.number_input('ID de l\'expérience ou de la formation', min_value=1, step=1)
+        skill_name = st.text_input('Nom de la compétence à ajouter')
+        item_type = st.selectbox('Type d\'élément', ('experience', 'education'))
+        if st.button('Ajouter Compétence'):
+            add_skill_to_item(item_id, skill_name, item_type)
 else:
     st.error("Nom d'utilisateur ou mot de passe incorrect")

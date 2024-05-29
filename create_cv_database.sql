@@ -68,3 +68,5 @@ WHERE id = 2;
 UPDATE skills
 SET proficiency = 5
 WHERE skill_name = 'SQL';
+
+

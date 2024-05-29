@@ -251,11 +251,23 @@ if role:
 
         # Créer le diagramme de Gantt avec Plotly
         fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="Type", color="Type", text="label",
-                          title="Frise Chronologique des Expériences et Formations")
+        title="")
 
         fig.update_yaxes(categoryorder="category ascending")
-        fig.update_traces(textposition='inside', insidetextanchor='middle')
-        fig.update_layout(showlegend=False)
+        fig.update_traces(textposition='outside', insidetextanchor='start')  # Déplacer le texte à l'extérieur des barres
+        fig.update_layout(showlegend=True)  # Afficher la légende
+
+        # Configuration de la légende pour une meilleure lisibilité
+        fig.update_layout(
+            legend=dict(
+                title="Type d'activité",
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            )
+        )
 
         st.plotly_chart(fig)
 

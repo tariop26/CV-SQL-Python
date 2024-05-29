@@ -18,6 +18,7 @@ skills_proficiency = {
     "Power BI": 75,
     "Wordpress": 80,
     "Python": 65,
+    "Jupyter": 70,
     "Excel": 90,
     "Autonomie": 95,
     "Travail en équipe": 90,

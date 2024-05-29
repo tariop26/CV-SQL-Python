@@ -338,10 +338,15 @@ if role:
                 radialaxis=dict(
                     visible=True,
                     range=[0, 100]
-                )),
+                ),
+                bgcolor='rgba(0,0,0,0)'  # Rendre le fond du radar transparent
+            ),
+            plot_bgcolor='rgba(0,0,0,0)',  # Rendre le fond de la zone de traçage transparent
+            paper_bgcolor='rgba(0,0,0,0)',  # Rendre le fond du papier transparent
             showlegend=False,
             title="Compétences et leur Niveau de Maîtrise (%)"
         )
+
 
         st.plotly_chart(radar_fig)
 

@@ -11,6 +11,32 @@ def fetch_data(query):
     conn.close()
     return data
 
+# Fonction pour mettre à jour l'expérience professionnelle
+def update_experience(job_title, end_date, description, id):
+    conn = sqlite3.connect('cv_database.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE experience
+        SET job_title = ?, end_date = ?, description = ?
+        WHERE id = ?
+    """, (job_title, end_date, description, id))
+    conn.commit()
+    conn.close()
+    st.success(f"Experience with id {id} updated successfully.")
+
+# Fonction pour mettre à jour une compétence
+def update_skill(proficiency, skill_name):
+    conn = sqlite3.connect('cv_database.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE skills
+        SET proficiency = ?
+        WHERE skill_name = ?
+    """, (proficiency, skill_name))
+    conn.commit()
+    conn.close()
+    st.success(f"Skill {skill_name} updated successfully.")
+
 st.title('CV de Manuel Poirat - Visualisations et Requêtes SQL')
 
 st.header('Expériences par Entreprise')
@@ -30,6 +56,14 @@ plt.xlabel('Nombre d\'Expériences')
 plt.ylabel('Entreprise')
 st.pyplot(plt)
 
+st.header('Mettre à jour une expérience professionnelle')
+exp_id = st.number_input('ID de l\'expérience', min_value=1, step=1)
+job_title = st.text_input('Titre du poste')
+end_date = st.date_input('Date de fin')
+description = st.text_area('Description')
+if st.button('Mettre à jour l\'expérience'):
+    update_experience(job_title, str(end_date), description, exp_id)
+
 st.header('Compétences triées par Niveau de Maîtrise')
 query_skills = """
     SELECT 
@@ -46,6 +80,12 @@ plt.title('Compétences triées par Niveau de Maîtrise')
 plt.xlabel('Niveau de Maîtrise')
 plt.ylabel('Compétence')
 st.pyplot(plt)
+
+st.header('Mettre à jour une compétence')
+skill_name = st.text_input('Nom de la compétence')
+proficiency = st.number_input('Niveau de maîtrise', min_value=1, max_value=5, step=1)
+if st.button('Mettre à jour la compétence'):
+    update_skill(proficiency, skill_name)
 
 st.header('Nombre de Projets par Compétence')
 query_projects = """

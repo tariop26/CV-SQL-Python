@@ -25,40 +25,110 @@ def add_skill(skill_name, proficiency):
     st.success(f"Skill '{skill_name}' added successfully.")
 
 # Fonction pour ajouter une expérience
-def add_experience(company, job_title, start_date, end_date, description):
+def add_experience(company, job_title, start_date, end_date, description, skills):
     conn = sqlite3.connect('cv_database.db')
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO experience (company, job_title, start_date, end_date, description)
         VALUES (?, ?, ?, ?, ?)
     """, (company, job_title, start_date, end_date, description))
+    exp_id = cursor.lastrowid
+    for skill in skills:
+        cursor.execute("""
+            INSERT INTO experience_skills (experience_id, skill_name)
+            VALUES (?, ?)
+        """, (exp_id, skill))
     conn.commit()
     conn.close()
     st.success(f"Experience '{job_title} at {company}' added successfully.")
 
 # Fonction pour ajouter une formation
-def add_education(institution, degree, start_date, end_date, description):
+def add_education(institution, degree, start_date, end_date, description, skills):
     conn = sqlite3.connect('cv_database.db')
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO education (institution, degree, start_date, end_date, description)
         VALUES (?, ?, ?, ?, ?)
     """, (institution, degree, start_date, end_date, description))
+    edu_id = cursor.lastrowid
+    for skill in skills:
+        cursor.execute("""
+            INSERT INTO education_skills (education_id, skill_name)
+            VALUES (?, ?)
+        """, (edu_id, skill))
     conn.commit()
     conn.close()
     st.success(f"Education '{degree} at {institution}' added successfully.")
 
-# Fonction pour ajouter une compétence à une expérience ou une formation
-def add_skill_to_item(item_id, skill_name, item_type):
+# Fonction pour mettre à jour une expérience
+def update_experience(job_title, end_date, description, skills, exp_id):
     conn = sqlite3.connect('cv_database.db')
     cursor = conn.cursor()
-    cursor.execute(f"""
-        INSERT INTO {item_type}_skills ({item_type}_id, skill_name)
-        VALUES (?, ?)
-    """, (item_id, skill_name))
+    cursor.execute("""
+        UPDATE experience
+        SET job_title = ?, end_date = ?, description = ?
+        WHERE id = ?
+    """, (job_title, end_date, description, exp_id))
+    cursor.execute("""
+        DELETE FROM experience_skills WHERE experience_id = ?
+    """, (exp_id,))
+    for skill in skills:
+        cursor.execute("""
+            INSERT INTO experience_skills (experience_id, skill_name)
+            VALUES (?, ?)
+        """, (exp_id, skill))
     conn.commit()
     conn.close()
-    st.success(f"Skill '{skill_name}' added to {item_type} with id {item_id} successfully.")
+    st.success(f"Experience with id {exp_id} updated successfully.")
+
+# Fonction pour mettre à jour une formation
+def update_education(degree, end_date, description, skills, edu_id):
+    conn = sqlite3.connect('cv_database.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE education
+        SET degree = ?, end_date = ?, description = ?
+        WHERE id = ?
+    """, (degree, end_date, description, edu_id))
+    cursor.execute("""
+        DELETE FROM education_skills WHERE education_id = ?
+    """, (edu_id,))
+    for skill in skills:
+        cursor.execute("""
+            INSERT INTO education_skills (education_id, skill_name)
+            VALUES (?, ?)
+        """, (edu_id, skill))
+    conn.commit()
+    conn.close()
+    st.success(f"Education with id {edu_id} updated successfully.")
+
+# Fonction pour supprimer une expérience
+def delete_experience(exp_id):
+    conn = sqlite3.connect('cv_database.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        DELETE FROM experience WHERE id = ?
+    """, (exp_id,))
+    cursor.execute("""
+        DELETE FROM experience_skills WHERE experience_id = ?
+    """, (exp_id,))
+    conn.commit()
+    conn.close()
+    st.success(f"Experience with id {exp_id} deleted successfully.")
+
+# Fonction pour supprimer une formation
+def delete_education(edu_id):
+    conn = sqlite3.connect('cv_database.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        DELETE FROM education WHERE id = ?
+    """, (edu_id,))
+    cursor.execute("""
+        DELETE FROM education_skills WHERE education_id = ?
+    """, (edu_id,))
+    conn.commit()
+    conn.close()
+    st.success(f"Education with id {edu_id} deleted successfully.")
 
 # Fonction pour récupérer les compétences associées
 def fetch_skills_for_item(item_id, item_type):
@@ -89,15 +159,15 @@ if role:
         st.header('Admin Interface')
 
         st.header('Expériences')
-        experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")
+        experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date, description FROM experience")
         experience_data['skills'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
-        experience_data = experience_data.drop(columns=['id'])  # Supprimer la colonne id
+        experience_data = experience_data.loc[:, experience_data.columns != experience_data.columns[0]]  # Supprimer la première colonne sans en-tête
         st.write(experience_data)
 
         st.header('Formations')
-        education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date FROM education")
+        education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date, description FROM education")
         education_data['skills'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
-        education_data = education_data.drop(columns=['id'])  # Supprimer la colonne id
+        education_data = education_data.loc[:, education_data.columns != education_data.columns[0]]  # Supprimer la première colonne sans en-tête
         st.write(education_data)
 
         st.header('Compétences')
@@ -106,6 +176,7 @@ if role:
 
         st.subheader('Ajouter une Formation ou une Expérience')
         add_type = st.selectbox('Type à ajouter', ['Formation', 'Expérience'])
+        skills_options = fetch_data("SELECT skill_name FROM skills")['skill_name'].tolist()
 
         if add_type == 'Expérience':
             company = st.text_input('Entreprise')
@@ -113,35 +184,46 @@ if role:
             start_date = st.date_input('Date de début')
             end_date = st.date_input('Date de fin')
             description = st.text_area('Description')
+            selected_skills = st.multiselect('Compétences', skills_options)
             if st.button('Ajouter Expérience'):
-                add_experience(company, job_title, str(start_date), str(end_date), description)
+                add_experience(company, job_title, str(start_date), str(end_date), description, selected_skills)
         elif add_type == 'Formation':
             institution = st.text_input('Institution')
             degree = st.text_input('Diplôme')
             start_date = st.date_input('Date de début')
             end_date = st.date_input('Date de fin')
             description = st.text_area('Description')
+            selected_skills = st.multiselect('Compétences', skills_options)
             if st.button('Ajouter Formation'):
-                add_education(institution, degree, str(start_date), str(end_date), description)
+                add_education(institution, degree, str(start_date), str(end_date), description, selected_skills)
 
-        st.subheader('Mettre à Jour une Expérience')
-        exp_id = st.number_input('ID de l\'expérience', min_value=1, step=1)
-        job_title = st.text_input('Titre du poste', key='update_job_title')
-        end_date = st.date_input('Date de fin', key='update_end_date')
-        description = st.text_area('Description', key='update_description')
-        if st.button('Mettre à Jour Expérience'):
-            update_experience(job_title, str(end_date), description, exp_id)
+        st.subheader('Mettre à Jour une Formation ou une Expérience')
+        update_type = st.selectbox('Type à mettre à jour', ['Formation', 'Expérience'])
+        update_id = st.number_input('ID', min_value=1, step=1)
+        if update_type == 'Expérience':
+            job_title = st.text_input('Titre du poste', key='update_job_title')
+            end_date = st.date_input('Date de fin', key='update_end_date')
+            description = st.text_area('Description', key='update_description')
+            selected_skills = st.multiselect('Compétences', skills_options, key='update_skills')
+            if st.button('Mettre à Jour Expérience'):
+                update_experience(job_title, str(end_date), description, selected_skills, update_id)
+        elif update_type == 'Formation':
+            degree = st.text_input('Diplôme', key='update_degree')
+            end_date = st.date_input('Date de fin', key='update_edu_end_date')
+            description = st.text_area('Description', key='update_edu_description')
+            selected_skills = st.multiselect('Compétences', skills_options, key='update_edu_skills')
+            if st.button('Mettre à Jour Formation'):
+                update_education(degree, str(end_date), description, selected_skills, update_id)
 
-        st.subheader('Supprimer une Expérience')
-        exp_id_delete = st.number_input('ID de l\'expérience à supprimer', min_value=1, step=1, key='delete_exp_id')
-        if st.button('Supprimer Expérience'):
-            delete_experience(exp_id_delete)
-
-        st.subheader('Mettre à Jour une Compétence')
-        skill_name = st.text_input('Nom de la compétence', key='update_skill_name')
-        proficiency = st.number_input('Niveau de maîtrise', min_value=1, max_value=5, step=1, key='update_proficiency')
-        if st.button('Mettre à Jour Compétence'):
-            update_skill(proficiency, skill_name)
+        st.subheader('Supprimer une Formation ou une Expérience')
+        delete_type = st.selectbox('Type à supprimer', ['Formation', 'Expérience'])
+        delete_id = st.number_input('ID à supprimer', min_value=1, step=1)
+        if delete_type == 'Expérience':
+            if st.button('Supprimer Expérience'):
+                delete_experience(delete_id)
+        elif delete_type == 'Formation':
+            if st.button('Supprimer Formation'):
+                delete_education(delete_id)
 
         st.subheader('Ajouter une Compétence')
         new_skill_name = st.text_input('Nom de la nouvelle compétence')

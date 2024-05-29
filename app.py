@@ -278,7 +278,6 @@ if role:
             xaxis=dict(type='date', range=['2000-01-01', pd.to_datetime('today')]),
             yaxis=dict(title="", showticklabels=True, ticktext=['Formations', 'Expériences'], tickvals=['Formations', 'Expériences']),
             showlegend=False,
-            title="Frise Chronologique des Expériences et Formations",
             height=600
         )
 
@@ -287,13 +286,11 @@ if role:
         st.header('Expériences')
         experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")
         experience_data['skills'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
-        experience_data = experience_data.drop(columns=['id'])  # Supprimer la colonne id
         st.write(experience_data)
 
         st.header('Formations')
         education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date FROM education")
         education_data['skills'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
-        education_data = education_data.drop(columns=['id'])  # Supprimer la colonne id
         st.write(education_data)
 
         st.header('Compétences')

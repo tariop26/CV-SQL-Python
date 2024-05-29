@@ -37,8 +37,8 @@ CREATE TABLE projects (
 -- Insertion des données dans la table education
 INSERT INTO education (institution, degree, field_of_study, start_date, end_date, description)
 VALUES
-    ('Lycée Condorcet', 'Bac S', 'Options maths', '2002-09-01', '2002-06-30', 'Description of degree program'),
-    ('Databird', 'Formation Data Analyst', 'Analyse de données', '2024-02-01', '2024-07-30', 'Description of degree program');
+    ('University A', 'Bachelor of Science', 'Computer Science', '2002-09-01', '2006-06-01', 'Description of degree program'),
+    ('University B', 'Master of Science', 'Data Science', '2007-09-01', '2009-06-01', 'Description of degree program');
 
 -- Insertion des données dans la table experience
 INSERT INTO experience (company, job_title, start_date, end_date, description)

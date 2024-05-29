@@ -1,7 +1,6 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 from auth import authenticate
 import random
@@ -76,11 +75,13 @@ if role:
         # Récupérer les expériences
         experiences = fetch_data("SELECT job_title, company, start_date, end_date FROM experience")
         experiences['type'] = 'Experience'
+        experiences['y'] = 'Expériences'
         experiences['color'] = 'green'
 
         # Récupérer les formations
         educations = fetch_data("SELECT degree AS job_title, institution AS company, start_date, end_date FROM education")
         educations['type'] = 'Education'
+        educations['y'] = 'Formations'
         educations['color'] = 'blue'
 
         # Combiner les deux DataFrames
@@ -96,7 +97,7 @@ if role:
         for _, row in timeline_data.iterrows():
             fig.add_trace(go.Bar(
                 x=[row['start_date'], row['end_date']],
-                y=[''],  # Single y-axis line
+                y=[row['y'], row['y']],
                 orientation='h',
                 width=0.4,
                 marker=dict(
@@ -104,13 +105,14 @@ if role:
                     opacity=row['opacity']
                 ),
                 text=row['label'],
-                hoverinfo='text'
+                hoverinfo='text',
+                name=row['label']
             ))
 
         fig.update_layout(
             barmode='stack',
             xaxis=dict(type='date', range=['2000-01-01', pd.to_datetime('today')]),
-            yaxis=dict(title="", showticklabels=False),
+            yaxis=dict(title="", showticklabels=True, ticktext=['Formations', 'Expériences'], tickvals=['Formations', 'Expériences']),
             showlegend=False,
             title="Frise Chronologique des Expériences et Formations",
             height=600

@@ -341,7 +341,7 @@ if role:
                     showticklabels=False
                 ),
                 angularaxis=dict(
-                    linewidth=1,
+                    linewidth=0,
                     showline=False,
                     showticklabels=True,
                     color='grey'

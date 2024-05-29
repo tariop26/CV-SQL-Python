@@ -321,19 +321,29 @@ if role:
         st.header('Compétences')
         skills_data = fetch_data("SELECT * FROM skills")
 
-        # Créer un graphique à barres horizontal pour les compétences
-        bar_fig = px.bar(
-            skills_data,
-            x='proficiency',
-            y='skill_name',
-            orientation='h',
-            title='Compétences et leur Niveau de Maîtrise',
-            labels={'proficiency': 'Niveau de Maîtrise', 'skill_name': 'Compétence'}
+        # Créer un graphique en radar pour les compétences
+        categories = skills_data['skill_name'].tolist()
+        values = skills_data['proficiency'].tolist()
+
+        radar_fig = go.Figure()
+
+        radar_fig.add_trace(go.Scatterpolar(
+            r=values,
+            theta=categories,
+            fill='toself'
+        ))
+
+        radar_fig.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, 100]
+                )),
+            showlegend=False,
+            title="Compétences et leur Niveau de Maîtrise (%)"
         )
 
-        bar_fig.update_layout(yaxis={'categoryorder':'total ascending'})
-
-        st.plotly_chart(bar_fig)
+        st.plotly_chart(radar_fig)
 
 else:
     st.error("Nom d'utilisateur ou mot de passe incorrect")

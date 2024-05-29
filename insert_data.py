@@ -12,21 +12,23 @@ cursor.execute("DELETE FROM experience")
 cursor.execute("DELETE FROM skills")
 conn.commit()
 
-# Fonction pour calculer la proficiency
-def calculate_proficiency(start_date):
-    if start_date < '2019-01-01':
-        return 4.5
-    elif start_date < '2021-01-01':
-        return 4
-    elif start_date < '2022-01-01':
-        return 3.5
-    elif start_date < '2023-01-01':
-        return 3
-    else:
-        return 2
+# Dictionnaire des compétences avec les valeurs de pourcentage
+skills_proficiency = {
+    "SQL": 70,
+    "Power BI": 75,
+    "Wordpress": 80,
+    "Python": 65,
+    "Excel": 90,
+    "Autonomie": 95,
+    "Travail en équipe": 90,
+    "Management": 90,
+    "Commerce": 85,
+    "Organisation de voyages": 95
+}
 
 # Fonction pour insérer ou mettre à jour les compétences
-def upsert_skill(skill_name, proficiency):
+def upsert_skill(skill_name):
+    proficiency = skills_proficiency.get(skill_name, 0)
     cursor.execute("SELECT proficiency FROM skills WHERE skill_name = ?", (skill_name,))
     row = cursor.fetchone()
     if row is None:
@@ -60,7 +62,7 @@ experiences = [
         "start_date": "2021-07-01",
         "end_date": "2023-08-01",
         "description": "Expérience de vie aux États-Unis (Denver, Colorado) en famille pendant 2 années.",
-        "skills": ["SQL", "Power BI"]
+        "skills": ["Organisation de voyages"]
     },
     {
         "company": "ADJOINT DE DIRECTION ROC FRANCE (AREAS)",
@@ -68,7 +70,7 @@ experiences = [
         "start_date": "2018-05-01",
         "end_date": "2021-06-01",
         "description": "Manager (20 employés) et assistant administratif 3 magasins Franprix et station-service Esso d'autoroute. Drôme",
-        "skills": ["Travail en équipe","Management","Excel"]
+        "skills": ["Travail en équipe","Management","Excel", "Commerce"]
     },
     {
         "company": "DIRECTEUR DE SITE HUTTOPIA",
@@ -76,7 +78,7 @@ experiences = [
         "start_date": "2013-01-01",
         "end_date": "2018-02-01",
         "description": "Manager de 20 personnes. Font-Romeu & Divonne-les-Bains",
-        "skills": ["Travail en équipe","Management"]
+        "skills": ["Travail en équipe","Management","Commerce"]
     },
     {
         "company": "CHARGÉ DE PROJETS ÉVÉNEMENTS ET VOYAGES",
@@ -84,7 +86,7 @@ experiences = [
         "start_date": "2010-09-01",
         "end_date": "2013-01-01",
         "description": "Agent de voyages multitâches. Lyon",
-        "skills": []
+        "skills": ["Organisation de voyages","Commerce"]
     },
     {
         "company": "COMMERCIAL PETIT FUTÉ",
@@ -92,7 +94,7 @@ experiences = [
         "start_date": "2009-01-01",
         "end_date": "2010-12-01",
         "description": "Création d'un portefeuille de 40 clients (hôtels et agences de voyages principalement) en Tanzanie et 60 en Afrique du Sud. Auto-entrepreneur",
-        "skills": ["Autonomie"]
+        "skills": ["Autonomie","Organisation de voyages","Commerce"]
     },
     {
         "company": "DIRECTEUR DE SITE AMERICAN VILLAGE",
@@ -100,7 +102,7 @@ experiences = [
         "start_date": "2007-06-01",
         "end_date": "2010-09-01",
         "description": "Manager d'une équipe d'animateurs anglophones et responsable de 50 enfants par quinzaine. Mâcon",
-        "skills": []
+        "skills": ["Travail en équipe","Management"]
     },
     {
         "company": "RESPONSABLE JARDIN D'ENFANTS MAGIC IN MOTION",
@@ -119,13 +121,12 @@ for exp in experiences:
         VALUES (?, ?, ?, ?, ?)
     """, (exp['company'], exp['job_title'], exp['start_date'], exp['end_date'], exp['description']))
     exp_id = cursor.lastrowid
-    proficiency = calculate_proficiency(exp['start_date'])
     for skill in exp['skills']:
         cursor.execute("""
             INSERT INTO experience_skills (experience_id, skill_name)
             VALUES (?, ?)
         """, (exp_id, skill))
-        upsert_skill(skill, proficiency)
+        upsert_skill(skill)
 
 # Liste des formations à insérer
 formations = [
@@ -154,7 +155,7 @@ formations = [
         "end_date": "2006-09-01",
         "description": "Master 1 Sport & Tourisme.",
         "field_of_study": "Sport & Tourisme",
-        "skills": []
+        "skills": ["Travail en équipe","Organisation de voyages"]
     }
 ]
 
@@ -165,13 +166,12 @@ for edu in formations:
         VALUES (?, ?, ?, ?, ?, ?)
     """, (edu['institution'], edu['degree'], edu['field_of_study'], edu['start_date'], edu['end_date'], edu['description']))
     edu_id = cursor.lastrowid
-    proficiency = calculate_proficiency(edu['start_date'])
     for skill in edu['skills']:
         cursor.execute("""
             INSERT INTO education_skills (education_id, skill_name)
             VALUES (?, ?)
         """, (edu_id, skill))
-        upsert_skill(skill, proficiency)
+        upsert_skill(skill)
 
 # Commit des modifications et fermer la connexion
 conn.commit()

@@ -93,18 +93,21 @@ if role:
         fig = go.Figure()
 
         for i, row in timeline_data.iterrows():
-            fig.add_trace(go.Scatter(
+            fig.add_trace(go.Bar(
                 x=[row['start_date'], row['end_date']],
                 y=[0, 0],
-                mode='lines+markers',
-                line=dict(color=row['color'], width=10),
-                marker=dict(size=10, opacity=row['opacity']),
+                base=[0, 0],
+                width=0.2,  # Spécifiez une largeur fixe pour chaque barre
                 name=row['label'],
+                marker_color=row['color'],
+                opacity=row['opacity'],
+                hoverinfo='text',
                 text=row['label'],
-                hoverinfo='text'
+                textposition='inside'
             ))
 
         fig.update_layout(
+            barmode='stack',
             xaxis=dict(type='date', range=['2000-01-01', pd.to_datetime('today')]),
             yaxis=dict(title="", showticklabels=False),
             showlegend=False,

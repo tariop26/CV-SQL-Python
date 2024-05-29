@@ -1,9 +1,17 @@
 # auth.py
+import os
 import streamlit as st
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement
+load_dotenv()
+
+# Obtenir le mot de passe admin depuis la variable d'environnement
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 # Liste des utilisateurs et leurs rôles
 users = {
-    "admin": {"password": "admin_pass", "role": "admin"},
+    "admin": {"password": ADMIN_PASSWORD, "role": "admin"},
     "user": {"role": "user"}
 }
 

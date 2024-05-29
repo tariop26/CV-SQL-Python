@@ -1,3 +1,4 @@
+# app.py
 import streamlit as st
 import sqlite3
 import pandas as pd
@@ -65,7 +66,7 @@ st.sidebar.title('Authentification')
 username = st.sidebar.text_input('Nom d\'utilisateur')
 password = None
 if username == "admin":
-    password = st.sidebar.text_input('mariemanu', type='password')
+    password = st.sidebar.text_input('Mot de passe', type='password')
 
 role = authenticate(username, password)
 

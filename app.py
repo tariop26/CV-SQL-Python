@@ -321,22 +321,19 @@ if role:
         st.header('Compétences')
         skills_data = fetch_data("SELECT * FROM skills")
 
-        # Créer les jauges pour chaque compétence
-        gauge_figures = []
-        for index, row in skills_data.iterrows():
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=row['proficiency'],
-                title={'text': row['skill_name']},
-                gauge={
-                    'axis': {'range': [1, 5]},
-                    'bar': {'color': "darkblue"},
-                }
-            ))
-            gauge_figures.append(fig)
+        # Créer un graphique à barres horizontal pour les compétences
+        bar_fig = px.bar(
+            skills_data,
+            x='proficiency',
+            y='skill_name',
+            orientation='h',
+            title='Compétences et leur Niveau de Maîtrise',
+            labels={'proficiency': 'Niveau de Maîtrise', 'skill_name': 'Compétence'}
+        )
 
-        for fig in gauge_figures:
-            st.plotly_chart(fig)
+        bar_fig.update_layout(yaxis={'categoryorder':'total ascending'})
+
+        st.plotly_chart(bar_fig)
 
 else:
     st.error("Nom d'utilisateur ou mot de passe incorrect")

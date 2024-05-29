@@ -15,8 +15,12 @@ conn.commit()
 # Fonction pour calculer la proficiency
 def calculate_proficiency(start_date):
     if start_date < '2019-01-01':
+        return 4.5
+    elif start_date < '2021-01-01':
         return 4
     elif start_date < '2022-01-01':
+        return 3.5
+    elif start_date < '2023-01-01':
         return 3
     else:
         return 2
@@ -56,7 +60,7 @@ experiences = [
         "start_date": "2021-07-01",
         "end_date": "2023-08-01",
         "description": "Expérience de vie aux États-Unis (Denver, Colorado) en famille pendant 2 années.",
-        "skills": []
+        "skills": ["SQL", "Power BI"]
     },
     {
         "company": "ADJOINT DE DIRECTION ROC FRANCE (AREAS)",

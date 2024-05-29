@@ -249,12 +249,12 @@ if role:
         timeline_data['end_date'] = pd.to_datetime(timeline_data['end_date'])
         timeline_data['label'] = timeline_data.apply(lambda row: f"{row['job_title']} at {row['company']}", axis=1)
 
-        # Créer le diagramme de Gantt avec Plotly
-        fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="Type", color="Type", text="label",
-        title="")
+        # Modifier la configuration du diagramme de Gantt pour afficher les textes à l'extérieur des barres et ajouter une légende distincte
+        fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="Type", color="Type", hover_name="label",
+        title="Frise Chronologique des Expériences et Formations")
 
         fig.update_yaxes(categoryorder="category ascending")
-        fig.update_traces(textposition='outside', insidetextanchor='start')  # Déplacer le texte à l'extérieur des barres
+        fig.update_traces(textposition='outside', insidetextanchor='start', marker=dict(line=dict(width=0.5, color='Black')))  # Déplacer le texte à l'extérieur des barres et ajouter des bordures pour une meilleure lisibilité
         fig.update_layout(showlegend=True)  # Afficher la légende
 
         # Configuration de la légende pour une meilleure lisibilité
@@ -269,7 +269,15 @@ if role:
             )
         )
 
+        # Configuration des labels de survol pour une meilleure lisibilité
+        fig.update_traces(
+            hovertemplate="<b>%{hovertext}</b><extra></extra>",
+            textfont_size=10,  # Ajuster la taille de la police des labels
+            insidetextanchor='middle'
+        )
+
         st.plotly_chart(fig)
+
 
         st.header('Expériences')
         experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")

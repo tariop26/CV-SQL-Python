@@ -253,7 +253,7 @@ if role:
         fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="Type", color="Type", hover_name="label",
         title="Frise Chronologique des Expériences et Formations")
 
-        fig.update_yaxes(categoryorder="category ascending", showsticklabels=False)
+        fig.update_yaxes(categoryorder="category ascending", showticklabels=False)
         fig.update_traces(textposition='outside', insidetextanchor='start', marker=dict(line=dict(width=0.5, color='Black')))  # Déplacer le texte à l'extérieur des barres et ajouter des bordures pour une meilleure lisibilité
         fig.update_layout(showlegend=True)  # Afficher la légende
 

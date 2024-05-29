@@ -3,6 +3,7 @@ import sqlite3
 import pandas as pd
 import plotly.express as px
 from auth import authenticate
+import random
 
 # Fonction pour obtenir les données d'une requête SQL
 def fetch_data(query):
@@ -37,6 +38,10 @@ def add_experience(company, job_title, start_date, end_date, description, skills
             INSERT INTO experience_skills (experience_id, skill_name)
             VALUES (?, ?)
         """, (exp_id, skill))
+        cursor.execute("""
+            INSERT OR IGNORE INTO skills (skill_name, proficiency)
+            VALUES (?, ?)
+        """, (skill, 1))  # Proficiency par défaut à 1 si la compétence est nouvelle
     conn.commit()
     conn.close()
     st.success(f"Experience '{job_title} at {company}' added successfully.")
@@ -55,6 +60,10 @@ def add_education(institution, degree, start_date, end_date, description, skills
             INSERT INTO education_skills (education_id, skill_name)
             VALUES (?, ?)
         """, (edu_id, skill))
+        cursor.execute("""
+            INSERT OR IGNORE INTO skills (skill_name, proficiency)
+            VALUES (?, ?)
+        """, (skill, 1))  # Proficiency par défaut à 1 si la compétence est nouvelle
     conn.commit()
     conn.close()
     st.success(f"Education '{degree} at {institution}' added successfully.")
@@ -76,6 +85,10 @@ def update_experience(job_title, end_date, description, skills, exp_id):
             INSERT INTO experience_skills (experience_id, skill_name)
             VALUES (?, ?)
         """, (exp_id, skill))
+        cursor.execute("""
+            INSERT OR IGNORE INTO skills (skill_name, proficiency)
+            VALUES (?, ?)
+        """, (skill, 1))  # Proficiency par défaut à 1 si la compétence est nouvelle
     conn.commit()
     conn.close()
     st.success(f"Experience with id {exp_id} updated successfully.")
@@ -97,6 +110,10 @@ def update_education(degree, end_date, description, skills, edu_id):
             INSERT INTO education_skills (education_id, skill_name)
             VALUES (?, ?)
         """, (edu_id, skill))
+        cursor.execute("""
+            INSERT OR IGNORE INTO skills (skill_name, proficiency)
+            VALUES (?, ?)
+        """, (skill, 1))  # Proficiency par défaut à 1 si la compétence est nouvelle
     conn.commit()
     conn.close()
     st.success(f"Education with id {edu_id} updated successfully.")
@@ -249,13 +266,12 @@ if role:
         timeline_data['end_date'] = pd.to_datetime(timeline_data['end_date'])
         timeline_data['label'] = timeline_data.apply(lambda row: f"{row['job_title']} at {row['company']}", axis=1)
 
-        # Modifier la configuration du diagramme de Gantt pour afficher les textes à l'extérieur des barres et ajouter une légende distincte
-        fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="Type", color="Type", hover_name="label",
-        title="Frise Chronologique des Expériences et Formations")
+        # Créer le diagramme de Gantt avec Plotly
+        fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="Type", color="Type", hover_name="label")
 
         fig.update_yaxes(categoryorder="category ascending", showticklabels=False)
-        fig.update_traces(textposition='outside', insidetextanchor='start', marker=dict(line=dict(width=0.5, color='Black')))  # Déplacer le texte à l'extérieur des barres et ajouter des bordures pour une meilleure lisibilité
-        fig.update_layout(showlegend=True)  # Afficher la légende
+        fig.update_traces(textposition='outside', insidetextanchor='start', marker=dict(line=dict(width=0.5, color='Black')))
+        fig.update_layout(showlegend=True)
 
         # Configuration de la légende pour une meilleure lisibilité
         fig.update_layout(
@@ -277,7 +293,6 @@ if role:
         )
 
         st.plotly_chart(fig)
-
 
         st.header('Expériences')
         experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")

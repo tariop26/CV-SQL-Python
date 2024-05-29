@@ -1,7 +1,6 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 from auth import authenticate
 import random
@@ -94,21 +93,18 @@ if role:
         fig = go.Figure()
 
         for i, row in timeline_data.iterrows():
-            fig.add_trace(go.Bar(
+            fig.add_trace(go.Scatter(
                 x=[row['start_date'], row['end_date']],
                 y=[0, 0],
-                base=[0, 0],
-                width=0.2,  # Spécifiez une largeur fixe pour chaque barre
+                mode='lines+markers',
+                line=dict(color=row['color'], width=10),
+                marker=dict(size=10, opacity=row['opacity']),
                 name=row['label'],
-                marker_color=row['color'],
-                opacity=row['opacity'],
-                hoverinfo='text',
                 text=row['label'],
-                textposition='inside'
+                hoverinfo='text'
             ))
 
         fig.update_layout(
-            barmode='stack',
             xaxis=dict(type='date', range=['2000-01-01', pd.to_datetime('today')]),
             yaxis=dict(title="", showticklabels=False),
             showlegend=False,

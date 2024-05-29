@@ -2,7 +2,9 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from auth import authenticate
+import random
 
 # Fonction pour obtenir les données d'une requête SQL
 def fetch_data(query):
@@ -74,39 +76,45 @@ if role:
         # Récupérer les expériences
         experiences = fetch_data("SELECT job_title, company, start_date, end_date FROM experience")
         experiences['type'] = 'Experience'
+        experiences['color'] = 'green'
 
         # Récupérer les formations
         educations = fetch_data("SELECT degree AS job_title, institution AS company, start_date, end_date FROM education")
         educations['type'] = 'Education'
+        educations['color'] = 'blue'
 
         # Combiner les deux DataFrames
         timeline_data = pd.concat([experiences, educations], ignore_index=True)
         timeline_data['start_date'] = pd.to_datetime(timeline_data['start_date'])
         timeline_data['end_date'] = pd.to_datetime(timeline_data['end_date'])
         timeline_data['label'] = timeline_data.apply(lambda row: f"{row['job_title']} at {row['company']}", axis=1)
+        timeline_data['opacity'] = [random.uniform(0.2, 0.6) for _ in range(len(timeline_data))]
 
         # Créer la frise chronologique avec Plotly
-        fig = px.timeline(
-            timeline_data, 
-            x_start="start_date", 
-            x_end="end_date", 
-            y="type", 
-            color="job_title", 
-            title="Frise Chronologique des Expériences et Formations",
-            text="label"
-        )
+        fig = go.Figure()
 
-        # Mettre à jour la disposition pour aligner les éléments à la même hauteur
-        fig.update_yaxes(categoryorder="total ascending", title="")
+        for i, row in timeline_data.iterrows():
+            fig.add_trace(go.Bar(
+                x=[row['start_date'], row['end_date']],
+                y=[0, 0],
+                base=[0, 0],
+                width=[row['end_date'] - row['start_date'], row['end_date'] - row['start_date']],
+                name=row['label'],
+                marker_color=row['color'],
+                opacity=row['opacity'],
+                hoverinfo='text',
+                text=row['label'],
+                textposition='inside'
+            ))
+
         fig.update_layout(
-            xaxis=dict(range=['2000-01-01', pd.to_datetime('today')]),
-            yaxis=dict(title=""),
+            barmode='stack',
+            xaxis=dict(type='date', range=['2000-01-01', pd.to_datetime('today')]),
+            yaxis=dict(title="", showticklabels=False),
             showlegend=False,
+            title="Frise Chronologique des Expériences et Formations",
             height=600
         )
-
-        # Ajouter les titres des postes
-        fig.update_traces(textposition="inside", insidetextanchor="middle")
 
         st.plotly_chart(fig)
 
@@ -121,12 +129,6 @@ if role:
         st.header('Compétences')
         skills_data = fetch_data("SELECT * FROM skills")
         st.write(skills_data)
-
-        st.header('Ajouter une Compétence à une Expérience ou une Formation')
-        item_id = st.number_input('ID de l\'expérience ou de la formation', min_value=1, step=1)
-        skill_name = st.text_input('Nom de la compétence à ajouter')
-        item_type = st.selectbox('Type d\'élément', ('experience', 'education'))
-        if st.button('Ajouter Compétence'):
-            add_skill_to_item(item_id, skill_name, item_type)
+        
 else:
     st.error("Nom d'utilisateur ou mot de passe incorrect")

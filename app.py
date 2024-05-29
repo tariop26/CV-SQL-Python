@@ -263,7 +263,7 @@ if role:
                 x=[row['start_date'], row['end_date']],
                 y=[row['y'], row['y']],
                 orientation='h',
-                width=0.4,
+                width=0.2,
                 marker=dict(
                     color=row['color'],
                     opacity=row['opacity']

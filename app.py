@@ -98,18 +98,32 @@ if role:
         if st.button('Ajouter Compétence'):
             add_skill(new_skill_name, new_proficiency)
 
+        st.header('Expériences')
+        experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")
+        experience_data['skills'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
+        st.write(experience_data)
+
+        st.header('Formations')
+        education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date FROM education")
+        education_data['skills'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
+        st.write(education_data)
+
+        st.header('Compétences')
+        skills_data = fetch_data("SELECT * FROM skills")
+        st.write(skills_data)
+
     # Frise chronologique pour les utilisateurs
     if role == "user":
         st.header('Frise Chronologique des Expériences et Formations')
 
         # Récupérer les expériences
-        experiences = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")
+        experiences = fetch_data("SELECT job_title, company, start_date, end_date FROM experience")
         experiences['type'] = 'Experience'
         experiences['y'] = 'Expériences'
         experiences['color'] = 'green'
 
         # Récupérer les formations
-        educations = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date FROM education")
+        educations = fetch_data("SELECT degree AS job_title, institution AS company, start_date, end_date FROM education")
         educations['type'] = 'Education'
         educations['y'] = 'Formations'
         educations['color'] = 'blue'

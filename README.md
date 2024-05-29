@@ -7,8 +7,8 @@ Junior certes mais débrouillard et passionné par les l'analyse de chiffres et 
 - `create_cv_database.sql`: Script pour créer une database avec mes infos personnelles et professionnelles. 
 - `queries.sql`: SQL queries pour montrer un peu ce que je suis capable de faire en SQL.
 - `queries.py`: Script Python pour intéragir avec la base SQL.
-- `visualizations.py`: Python script to create visualizations.
-- `app.py`: Web application using Flask or Streamlit.
+- `visualizations.py`: Script Python pour créer des visualisations.
+- `app.py`: Web application.
 - `README.md`: Ce fichier explicatif.
 
 ## Comment utiliser mon CV Codé ? 

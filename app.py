@@ -129,6 +129,12 @@ if role:
         st.header('Compétences')
         skills_data = fetch_data("SELECT * FROM skills")
         st.write(skills_data)
-        
+
+        st.header('Ajouter une Compétence à une Expérience ou une Formation')
+        item_id = st.number_input('ID de l\'expérience ou de la formation', min_value=1, step=1)
+        skill_name = st.text_input('Nom de la compétence à ajouter')
+        item_type = st.selectbox('Type d\'élément', ('experience', 'education'))
+        if st.button('Ajouter Compétence'):
+            add_skill_to_item(item_id, skill_name, item_type)
 else:
     st.error("Nom d'utilisateur ou mot de passe incorrect")

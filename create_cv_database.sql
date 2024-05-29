@@ -1,4 +1,4 @@
--- Create the education table
+-- Création de la table education
 CREATE TABLE education (
     id INTEGER PRIMARY KEY,
     institution TEXT NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE education (
     description TEXT
 );
 
--- Create the experience table
+-- Création de la table experience
 CREATE TABLE experience (
     id INTEGER PRIMARY KEY,
     company TEXT NOT NULL,
@@ -19,14 +19,14 @@ CREATE TABLE experience (
     description TEXT
 );
 
--- Create the skills table
+-- Création de la table skills
 CREATE TABLE skills (
     id INTEGER PRIMARY KEY,
     skill_name TEXT NOT NULL,
     proficiency INTEGER NOT NULL
 );
 
--- Create the projects table
+-- Création de la table projects
 CREATE TABLE projects (
     id INTEGER PRIMARY KEY,
     project_name TEXT NOT NULL,
@@ -34,27 +34,37 @@ CREATE TABLE projects (
     technologies_used TEXT
 );
 
--- Insert sample data into the education table
+-- Insertion des données dans la table education
 INSERT INTO education (institution, degree, field_of_study, start_date, end_date, description)
 VALUES
     ('University A', 'Bachelor of Science', 'Computer Science', '2002-09-01', '2006-06-01', 'Description of degree program'),
     ('University B', 'Master of Science', 'Data Science', '2007-09-01', '2009-06-01', 'Description of degree program');
 
--- Insert sample data into the experience table
+-- Insertion des données dans la table experience
 INSERT INTO experience (company, job_title, start_date, end_date, description)
 VALUES
     ('Company A', 'Software Developer', '2009-07-01', '2013-08-01', 'Description of job responsibilities'),
     ('Company B', 'Data Analyst', '2013-09-01', '2018-12-01', 'Description of job responsibilities');
 
--- Insert sample data into the skills table
+-- Insertion des données dans la table skills
 INSERT INTO skills (skill_name, proficiency)
 VALUES
     ('Python', 5),
     ('SQL', 4),
     ('Data Analysis', 5);
 
--- Insert sample data into the projects table
+-- Insertion des données dans la table projects
 INSERT INTO projects (project_name, description, technologies_used)
 VALUES
     ('Project A', 'Description of Project A', 'Python, SQL, Pandas'),
     ('Project B', 'Description of Project B', 'Python, Flask, SQLAlchemy');
+
+-- Mise à jour d'une expérience professionnelle
+UPDATE experience
+SET job_title = 'Senior Data Analyst', end_date = '2022-12-01', description = 'Updated description of job responsibilities'
+WHERE id = 2;
+
+-- Mise à jour d'une compétence
+UPDATE skills
+SET proficiency = 5
+WHERE skill_name = 'SQL';

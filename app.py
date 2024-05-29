@@ -1,9 +1,8 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
-import plotly.graph_objects as go
+import plotly.express as px
 from auth import authenticate
-import random
 
 # Fonction pour obtenir les données d'une requête SQL
 def fetch_data(query):
@@ -238,48 +237,25 @@ if role:
 
         # Récupérer les expériences
         experiences = fetch_data("SELECT job_title, company, start_date, end_date FROM experience")
-        experiences['type'] = 'Experience'
-        experiences['y'] = 'Expériences'
-        experiences['color'] = 'green'
+        experiences['Type'] = 'Expérience'
 
         # Récupérer les formations
         educations = fetch_data("SELECT degree AS job_title, institution AS company, start_date, end_date FROM education")
-        educations['type'] = 'Education'
-        educations['y'] = 'Formations'
-        educations['color'] = 'blue'
+        educations['Type'] = 'Formation'
 
         # Combiner les deux DataFrames
         timeline_data = pd.concat([experiences, educations], ignore_index=True)
         timeline_data['start_date'] = pd.to_datetime(timeline_data['start_date'])
         timeline_data['end_date'] = pd.to_datetime(timeline_data['end_date'])
         timeline_data['label'] = timeline_data.apply(lambda row: f"{row['job_title']} at {row['company']}", axis=1)
-        timeline_data['opacity'] = [random.uniform(0.2, 0.6) for _ in range(len(timeline_data))]
 
-        # Créer la frise chronologique avec Plotly
-        fig = go.Figure()
+        # Créer le diagramme de Gantt avec Plotly
+        fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="Type", color="Type", text="label",
+                          title="Frise Chronologique des Expériences et Formations")
 
-        for _, row in timeline_data.iterrows():
-            fig.add_trace(go.Bar(
-                x=[row['start_date'], row['end_date']],
-                y=[row['y'], row['y']],
-                orientation='h',
-                width=0.2,
-                marker=dict(
-                    color=row['color'],
-                    opacity=row['opacity']
-                ),
-                text=row['label'],
-                hoverinfo='text',
-                name=row['label']
-            ))
-
-        fig.update_layout(
-            barmode='stack',
-            xaxis=dict(type='date', range=['2000-01-01', pd.to_datetime('today')]),
-            yaxis=dict(title="", showticklabels=True, ticktext=['Formations', 'Expériences'], tickvals=['Formations', 'Expériences']),
-            showlegend=False,
-            height=600
-        )
+        fig.update_yaxes(categoryorder="category ascending")
+        fig.update_traces(textposition='inside', insidetextanchor='middle')
+        fig.update_layout(showlegend=False)
 
         st.plotly_chart(fig)
 

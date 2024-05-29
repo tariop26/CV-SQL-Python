@@ -338,11 +338,13 @@ if role:
                 radialaxis=dict(
                     visible=True,
                     range=[0, 100],
-                    showticklabels=False
+                    showticklabels=False,
+                    showline=False,
+                    ticks=''
                 ),
                 angularaxis=dict(
-                    linewidth=0,
-                    showline=False,
+                    linewidth=1,
+                    showline=True,
                     showticklabels=True,
                     color='grey'
                 ),

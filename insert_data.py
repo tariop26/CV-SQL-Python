@@ -131,9 +131,9 @@ formations = [
 # Insérer les formations dans la base de données
 for edu in formations:
     cursor.execute("""
-        INSERT INTO education (institution, degree, start_date, end_date, description)
-        VALUES (?, ?, ?, ?, ?)
-    """, (edu['institution'], edu['degree'], edu['start_date'], edu['end_date'], edu['description']))
+        INSERT INTO education (institution, degree, field_of_study, start_date, end_date, description)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (edu['institution'], edu['degree'], edu['field_of_study'], edu['start_date'], edu['end_date'], edu['description']))
     edu_id = cursor.lastrowid
     for skill in edu['skills']:
         cursor.execute("""

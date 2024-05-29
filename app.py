@@ -336,8 +336,15 @@ if role:
         radar_fig.update_layout(
             polar=dict(
                 radialaxis=dict(
-                    visible=False,
-                    range=[0, 100]
+                    visible=True,
+                    range=[0, 100],
+                    showticklabels=False
+                ),
+                angularaxis=dict(
+                    linewidth=1,
+                    showline=True,
+                    showticklabels=True,
+                    color='grey'
                 ),
                 bgcolor='rgba(0,0,0,0)'  # Rendre le fond du radar transparent
             ),

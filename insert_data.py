@@ -4,14 +4,6 @@ import sqlite3
 conn = sqlite3.connect('cv_database.db')
 cursor = conn.cursor()
 
-# Supprimer toutes les expériences existantes
-cursor.execute("DELETE FROM experience")
-cursor.execute("DELETE FROM experience_skills")
-
-# Supprimer toutes les formations existantes
-cursor.execute("DELETE FROM education")
-cursor.execute("DELETE FROM education_skills")
-
 # Liste des expériences à insérer
 experiences = [
     {

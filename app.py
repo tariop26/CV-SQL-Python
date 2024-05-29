@@ -336,13 +336,13 @@ if role:
         radar_fig.update_layout(
             polar=dict(
                 radialaxis=dict(
-                    visible=False,
+                    visible=True,
                     range=[0, 100],
                     showticklabels=False
                 ),
                 angularaxis=dict(
                     linewidth=1,
-                    showline=True,
+                    showline=False,
                     showticklabels=True,
                     color='grey'
                 ),

@@ -1,8 +1,7 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.express as px
 from auth import authenticate
 
 # Fonction pour obtenir les données d'une requête SQL
@@ -68,68 +67,28 @@ if role:
         if st.button('Mettre à Jour Compétence'):
             update_skill(proficiency, skill_name)
 
-    st.header('Visualisations')
-    st.subheader('Expériences par Entreprise')
-    query_experience = """
-        SELECT 
-            company, 
-            COUNT(*) as num_experiences
-        FROM experience
-        GROUP BY company;
-    """
-    experience_data = fetch_data(query_experience)
-    st.write(experience_data)
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x='num_experiences', y='company', data=experience_data)
-    plt.title('Nombre d\'Expériences par Entreprise')
-    plt.xlabel('Nombre d\'Expériences')
-    plt.ylabel('Entreprise')
-    st.pyplot(plt)
-
-    st.subheader('Compétences triées par Niveau de Maîtrise')
-    query_skills = """
-        SELECT 
-            skill_name, 
-            proficiency
-        FROM skills
-        ORDER BY proficiency DESC;
-    """
-    skills_data = fetch_data(query_skills)
-    st.write(skills_data)
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x='proficiency', y='skill_name', data=skills_data)
-    plt.title('Compétences triées par Niveau de Maîtrise')
-    plt.xlabel('Niveau de Maîtrise')
-    plt.ylabel('Compétence')
-    st.pyplot(plt)
-
-    st.subheader('Nombre de Projets par Compétence')
-    query_projects = """
-        WITH project_counts AS (
-            SELECT 
-                skill_name, 
-                COUNT(*) as num_projects
-            FROM projects
-            JOIN skills ON projects.technologies_used LIKE '%' || skills.skill_name || '%'
-            GROUP BY skill_name
-        )
-        SELECT 
-            skill_name, 
-            num_projects
-        FROM project_counts
-        ORDER BY num_projects DESC;
-    """
-    projects_data = fetch_data(query_projects)
-    st.write(projects_data)
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x='num_projects', y='skill_name', data=projects_data)
-    plt.title('Nombre de Projets par Compétence')
-    plt.xlabel('Nombre de Projets')
-    plt.ylabel('Compétence')
-    st.pyplot(plt)
-
-    # Afficher les expériences, les formations et les compétences pour les utilisateurs
+    # Frise chronologique pour les utilisateurs
     if role == "user":
+        st.header('Frise Chronologique des Expériences et Formations')
+
+        # Récupérer les expériences
+        experiences = fetch_data("SELECT job_title, company, start_date, end_date FROM experience")
+        experiences['type'] = 'Experience'
+
+        # Récupérer les formations
+        educations = fetch_data("SELECT degree AS job_title, institution AS company, start_date, end_date FROM education")
+        educations['type'] = 'Education'
+
+        # Combiner les deux DataFrames
+        timeline_data = pd.concat([experiences, educations], ignore_index=True)
+        timeline_data['start_date'] = pd.to_datetime(timeline_data['start_date'])
+        timeline_data['end_date'] = pd.to_datetime(timeline_data['end_date'])
+
+        # Créer la frise chronologique avec Plotly
+        fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="job_title", color="type", title="Frise Chronologique des Expériences et Formations")
+        fig.update_layout(xaxis=dict(range=['2000-01-01', '2023-12-31']))
+        st.plotly_chart(fig)
+
         st.header('Expériences')
         experience_data = fetch_data("SELECT * FROM experience")
         st.write(experience_data)

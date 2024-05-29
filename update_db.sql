@@ -13,3 +13,11 @@ CREATE TABLE IF NOT EXISTS education_skills (
     FOREIGN KEY (education_id) REFERENCES education(id),
     FOREIGN KEY (skill_name) REFERENCES skills(skill_name)
 );
+
+-- Ajouter une colonne description à la table experience si elle n'existe pas
+ALTER TABLE experience ADD COLUMN IF NOT EXISTS description TEXT;
+
+-- Ajouter une colonne description à la table education si elle n'existe pas
+ALTER TABLE education ADD COLUMN IF NOT EXISTS description TEXT;
+
+ALTER TABLE education ALTER COLUMN field_of_study DROP NOT NULL;

@@ -21,12 +21,16 @@ def calculate_proficiency(start_date):
     else:
         return 2
 
-# Fonction pour vérifier si une compétence existe déjà
-def skill_exists(skill_name):
-    cursor.execute("""
-        SELECT proficiency FROM skills WHERE skill_name = ?
-    """, (skill_name,))
-    return cursor.fetchone()
+# Fonction pour insérer ou mettre à jour les compétences
+def upsert_skill(skill_name, proficiency):
+    cursor.execute("SELECT proficiency FROM skills WHERE skill_name = ?", (skill_name,))
+    row = cursor.fetchone()
+    if row is None:
+        cursor.execute("INSERT INTO skills (skill_name, proficiency) VALUES (?, ?)", (skill_name, proficiency))
+    else:
+        current_proficiency = row[0]
+        if proficiency > current_proficiency:
+            cursor.execute("UPDATE skills SET proficiency = ? WHERE skill_name = ?", (proficiency, skill_name))
 
 # Liste des expériences à insérer
 experiences = [
@@ -117,18 +121,7 @@ for exp in experiences:
             INSERT INTO experience_skills (experience_id, skill_name)
             VALUES (?, ?)
         """, (exp_id, skill))
-        existing_skill = skill_exists(skill)
-        if existing_skill:
-            existing_proficiency = existing_skill[0]
-            if proficiency > existing_proficiency:
-                cursor.execute("""
-                    UPDATE skills SET proficiency = ? WHERE skill_name = ?
-                """, (proficiency, skill))
-        else:
-            cursor.execute("""
-                INSERT INTO skills (skill_name, proficiency)
-                VALUES (?, ?)
-            """, (skill, proficiency))
+        upsert_skill(skill, proficiency)
 
 # Liste des formations à insérer
 formations = [
@@ -174,18 +167,7 @@ for edu in formations:
             INSERT INTO education_skills (education_id, skill_name)
             VALUES (?, ?)
         """, (edu_id, skill))
-        existing_skill = skill_exists(skill)
-        if existing_skill:
-            existing_proficiency = existing_skill[0]
-            if proficiency > existing_proficiency:
-                cursor.execute("""
-                    UPDATE skills SET proficiency = ? WHERE skill_name = ?
-                """, (proficiency, skill))
-        else:
-            cursor.execute("""
-                INSERT INTO skills (skill_name, proficiency)
-                VALUES (?, ?)
-            """, (skill, proficiency))
+        upsert_skill(skill, proficiency)
 
 # Commit des modifications et fermer la connexion
 conn.commit()

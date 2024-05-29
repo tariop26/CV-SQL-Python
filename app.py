@@ -13,7 +13,7 @@ def fetch_data(query):
     conn.close()
     return data
 
-# Fonction pour ajouter une compétence à une expérience ou une  formation
+# Fonction pour ajouter une compétence à une expérience ou une formation
 def add_skill_to_item(item_id, skill_name, item_type):
     conn = sqlite3.connect('cv_database.db')
     cursor = conn.cursor()
@@ -98,7 +98,7 @@ if role:
                 x=[row['start_date'], row['end_date']],
                 y=[0, 0],
                 base=[0, 0],
-                width=[row['end_date'] - row['start_date'], row['end_date'] - row['start_date']],
+                width=0.2,  # Spécifiez une largeur fixe pour chaque barre
                 name=row['label'],
                 marker_color=row['color'],
                 opacity=row['opacity'],

@@ -2,6 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from auth import authenticate
 import random
 
@@ -38,10 +39,7 @@ def add_experience(company, job_title, start_date, end_date, description, skills
             INSERT INTO experience_skills (experience_id, skill_name)
             VALUES (?, ?)
         """, (exp_id, skill))
-        cursor.execute("""
-            INSERT OR IGNORE INTO skills (skill_name, proficiency)
-            VALUES (?, ?)
-        """, (skill, 1))  # Proficiency par défaut à 1 si la compétence est nouvelle
+        upsert_skill(skill, calculate_proficiency(start_date))
     conn.commit()
     conn.close()
     st.success(f"Experience '{job_title} at {company}' added successfully.")
@@ -51,19 +49,16 @@ def add_education(institution, degree, start_date, end_date, description, skills
     conn = sqlite3.connect('cv_database.db')
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO education (institution, degree, start_date, end_date, description)
-        VALUES (?, ?, ?, ?, ?)
-    """, (institution, degree, start_date, end_date, description))
+        INSERT INTO education (institution, degree, field_of_study, start_date, end_date, description)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (institution, degree, 'Field of Study', start_date, end_date, description))
     edu_id = cursor.lastrowid
     for skill in skills:
         cursor.execute("""
             INSERT INTO education_skills (education_id, skill_name)
             VALUES (?, ?)
         """, (edu_id, skill))
-        cursor.execute("""
-            INSERT OR IGNORE INTO skills (skill_name, proficiency)
-            VALUES (?, ?)
-        """, (skill, 1))  # Proficiency par défaut à 1 si la compétence est nouvelle
+        upsert_skill(skill, calculate_proficiency(start_date))
     conn.commit()
     conn.close()
     st.success(f"Education '{degree} at {institution}' added successfully.")
@@ -85,10 +80,7 @@ def update_experience(job_title, end_date, description, skills, exp_id):
             INSERT INTO experience_skills (experience_id, skill_name)
             VALUES (?, ?)
         """, (exp_id, skill))
-        cursor.execute("""
-            INSERT OR IGNORE INTO skills (skill_name, proficiency)
-            VALUES (?, ?)
-        """, (skill, 1))  # Proficiency par défaut à 1 si la compétence est nouvelle
+        upsert_skill(skill, calculate_proficiency(end_date))
     conn.commit()
     conn.close()
     st.success(f"Experience with id {exp_id} updated successfully.")
@@ -110,10 +102,7 @@ def update_education(degree, end_date, description, skills, edu_id):
             INSERT INTO education_skills (education_id, skill_name)
             VALUES (?, ?)
         """, (edu_id, skill))
-        cursor.execute("""
-            INSERT OR IGNORE INTO skills (skill_name, proficiency)
-            VALUES (?, ?)
-        """, (skill, 1))  # Proficiency par défaut à 1 si la compétence est nouvelle
+        upsert_skill(skill, calculate_proficiency(end_date))
     conn.commit()
     conn.close()
     st.success(f"Education with id {edu_id} updated successfully.")
@@ -157,6 +146,30 @@ def fetch_skills_for_item(item_id, item_type):
     data = pd.read_sql_query(query, conn, params=(item_id,))
     conn.close()
     return data['skill_name'].tolist()
+
+# Fonction pour calculer la proficiency
+def calculate_proficiency(start_date):
+    if start_date < '2019-01-01':
+        return 4
+    elif start_date < '2022-01-01':
+        return 3
+    else:
+        return 2
+
+# Fonction pour insérer ou mettre à jour les compétences
+def upsert_skill(skill_name, proficiency):
+    conn = sqlite3.connect('cv_database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT proficiency FROM skills WHERE skill_name = ?", (skill_name,))
+    row = cursor.fetchone()
+    if row is None:
+        cursor.execute("INSERT INTO skills (skill_name, proficiency) VALUES (?, ?)", (skill_name, proficiency))
+    else:
+        current_proficiency = row[0]
+        if proficiency > current_proficiency:
+            cursor.execute("UPDATE skills SET proficiency = ? WHERE skill_name = ?", (proficiency, skill_name))
+    conn.commit()
+    conn.close()
 
 # Interface de connexion
 st.title('CV de Manuel Poirat - Visualisations et Requêtes SQL')
@@ -267,7 +280,8 @@ if role:
         timeline_data['label'] = timeline_data.apply(lambda row: f"{row['job_title']} at {row['company']}", axis=1)
 
         # Créer le diagramme de Gantt avec Plotly
-        fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="Type", color="Type", hover_name="label")
+        fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="Type", color="Type", hover_name="label",
+                          title="Frise Chronologique des Expériences et Formations")
 
         fig.update_yaxes(categoryorder="category ascending", showticklabels=False)
         fig.update_traces(textposition='outside', insidetextanchor='start', marker=dict(line=dict(width=0.5, color='Black')))
@@ -306,7 +320,23 @@ if role:
 
         st.header('Compétences')
         skills_data = fetch_data("SELECT * FROM skills")
-        st.write(skills_data)
+
+        # Créer les jauges pour chaque compétence
+        gauge_figures = []
+        for index, row in skills_data.iterrows():
+            fig = go.Figure(go.Indicator(
+                mode="gauge+number",
+                value=row['proficiency'],
+                title={'text': row['skill_name']},
+                gauge={
+                    'axis': {'range': [1, 5]},
+                    'bar': {'color': "darkblue"},
+                }
+            ))
+            gauge_figures.append(fig)
+
+        for fig in gauge_figures:
+            st.plotly_chart(fig)
 
 else:
     st.error("Nom d'utilisateur ou mot de passe incorrect")

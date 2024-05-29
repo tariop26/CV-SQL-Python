@@ -63,7 +63,7 @@ def delete_experience(id):
 # Interface de connexion
 st.title('CV de Manuel Poirat - Visualisations et Requêtes SQL')
 st.sidebar.title('Authentification')
-username = st.sidebar.text_input('Nom d\'utilisateur')
+username = st.sidebar.text_input('Quel est votre prénom ?')
 password = None
 if username == "admin":
     password = st.sidebar.text_input('Mot de passe', type='password')

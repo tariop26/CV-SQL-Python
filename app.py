@@ -13,7 +13,7 @@ def fetch_data(query):
     conn.close()
     return data
 
-# Fonction pour ajouter une compétence à une expérience ou une formation
+# Fonction pour ajouter une compétence à une expérience ou une  formation
 def add_skill_to_item(item_id, skill_name, item_type):
     conn = sqlite3.connect('cv_database.db')
     cursor = conn.cursor()

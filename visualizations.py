@@ -54,7 +54,7 @@ query_projects = """
         JOIN skills ON projects.technologies_used LIKE '%' || skills.skill_name || '%'
         GROUP BY skill_name
     )
-    SELECT 
+    SELECT
         skill_name, 
         num_projects
     FROM project_counts

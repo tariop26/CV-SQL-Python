@@ -6,6 +6,9 @@ import plotly.graph_objects as go
 from auth import authenticate
 import random
 
+# Configurer Streamlit pour utiliser toute la largeur de l'écran
+st.set_page_config(layout="wide")
+
 # Fonction pour obtenir les données d'une requête SQL
 def fetch_data(query):
     conn = sqlite3.connect('cv_database.db')
@@ -13,163 +16,7 @@ def fetch_data(query):
     conn.close()
     return data
 
-# Fonction pour ajouter une compétence
-def add_skill(skill_name, proficiency):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO skills (skill_name, proficiency)
-        VALUES (?, ?)
-    """, (skill_name, proficiency))
-    conn.commit()
-    conn.close()
-    st.success(f"Skill '{skill_name}' added successfully.")
-
-# Fonction pour ajouter une expérience
-def add_experience(company, job_title, start_date, end_date, description, skills):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO experience (company, job_title, start_date, end_date, description)
-        VALUES (?, ?, ?, ?, ?)
-    """, (company, job_title, start_date, end_date, description))
-    exp_id = cursor.lastrowid
-    for skill in skills:
-        cursor.execute("""
-            INSERT INTO experience_skills (experience_id, skill_name)
-            VALUES (?, ?)
-        """, (exp_id, skill))
-        upsert_skill(skill, calculate_proficiency(start_date))
-    conn.commit()
-    conn.close()
-    st.success(f"Experience '{job_title} at {company}' added successfully.")
-
-# Fonction pour ajouter une formation
-def add_education(institution, degree, start_date, end_date, description, skills):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO education (institution, degree, field_of_study, start_date, end_date, description)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (institution, degree, 'Field of Study', start_date, end_date, description))
-    edu_id = cursor.lastrowid
-    for skill in skills:
-        cursor.execute("""
-            INSERT INTO education_skills (education_id, skill_name)
-            VALUES (?, ?)
-        """, (edu_id, skill))
-        upsert_skill(skill, calculate_proficiency(start_date))
-    conn.commit()
-    conn.close()
-    st.success(f"Education '{degree} at {institution}' added successfully.")
-
-# Fonction pour mettre à jour une expérience
-def update_experience(job_title, end_date, description, skills, exp_id):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE experience
-        SET job_title = ?, end_date = ?, description = ?
-        WHERE id = ?
-    """, (job_title, end_date, description, exp_id))
-    cursor.execute("""
-        DELETE FROM experience_skills WHERE experience_id = ?
-    """, (exp_id,))
-    for skill in skills:
-        cursor.execute("""
-            INSERT INTO experience_skills (experience_id, skill_name)
-            VALUES (?, ?)
-        """, (exp_id, skill))
-        upsert_skill(skill, calculate_proficiency(end_date))
-    conn.commit()
-    conn.close()
-    st.success(f"Experience with id {exp_id} updated successfully.")
-
-# Fonction pour mettre à jour une formation
-def update_education(degree, end_date, description, skills, edu_id):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE education
-        SET degree = ?, end_date = ?, description = ?
-        WHERE id = ?
-    """, (degree, end_date, description, edu_id))
-    cursor.execute("""
-        DELETE FROM education_skills WHERE education_id = ?
-    """, (edu_id,))
-    for skill in skills:
-        cursor.execute("""
-            INSERT INTO education_skills (education_id, skill_name)
-            VALUES (?, ?)
-        """, (edu_id, skill))
-        upsert_skill(skill, calculate_proficiency(end_date))
-    conn.commit()
-    conn.close()
-    st.success(f"Education with id {edu_id} updated successfully.")
-
-# Fonction pour supprimer une expérience
-def delete_experience(exp_id):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        DELETE FROM experience WHERE id = ?
-    """, (exp_id,))
-    cursor.execute("""
-        DELETE FROM experience_skills WHERE experience_id = ?
-    """, (exp_id,))
-    conn.commit()
-    conn.close()
-    st.success(f"Experience with id {exp_id} deleted successfully.")
-
-# Fonction pour supprimer une formation
-def delete_education(edu_id):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        DELETE FROM education WHERE id = ?
-    """, (edu_id,))
-    cursor.execute("""
-        DELETE FROM education_skills WHERE education_id = ?
-    """, (edu_id,))
-    conn.commit()
-    conn.close()
-    st.success(f"Education with id {edu_id} deleted successfully.")
-
-# Fonction pour récupérer les compétences associées
-def fetch_skills_for_item(item_id, item_type):
-    conn = sqlite3.connect('cv_database.db')
-    query = f"""
-        SELECT skill_name
-        FROM {item_type}_skills
-        WHERE {item_type}_id = ?
-    """
-    data = pd.read_sql_query(query, conn, params=(item_id,))
-    conn.close()
-    return data['skill_name'].tolist()
-
-# Fonction pour calculer la proficiency
-def calculate_proficiency(start_date):
-    if start_date < '2019-01-01':
-        return 4
-    elif start_date < '2022-01-01':
-        return 3
-    else:
-        return 2
-
-# Fonction pour insérer ou mettre à jour les compétences
-def upsert_skill(skill_name, proficiency):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT proficiency FROM skills WHERE skill_name = ?", (skill_name,))
-    row = cursor.fetchone()
-    if row is None:
-        cursor.execute("INSERT INTO skills (skill_name, proficiency) VALUES (?, ?)", (skill_name, proficiency))
-    else:
-        current_proficiency = row[0]
-        if proficiency > current_proficiency:
-            cursor.execute("UPDATE skills SET proficiency = ? WHERE skill_name = ?", (proficiency, skill_name))
-    conn.commit()
-    conn.close()
+# (Le reste de votre code...)
 
 # Interface de connexion
 st.title('CV de Manuel Poirat - Visualisations et Requêtes SQL')
@@ -338,9 +185,9 @@ if role:
                 radialaxis=dict(
                     visible=True,
                     range=[0, 100],
-                    showticklabels=False,
-                    showline=False,
-                    ticks=''
+                    showticklabels=False,  # Masquer les étiquettes de graduation
+                    showline=False,  # Masquer la ligne de l'axe radial
+                    ticks=''  # Masquer les graduations sur l'axe radial
                 ),
                 angularaxis=dict(
                     linewidth=1,
@@ -355,7 +202,6 @@ if role:
             showlegend=False,
             title="Compétences et leur Niveau de Maîtrise (%)"
         )
-
 
         st.plotly_chart(radar_fig)
 

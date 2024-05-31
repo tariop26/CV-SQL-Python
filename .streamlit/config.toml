@@ -1,0 +1,13 @@
+# .streamlit/config.toml
+[server]
+headless = true
+
+[theme]
+primaryColor = "#4CAF50"
+backgroundColor = "#F0F2F6"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#262730"
+font = "sans serif"
+
+[layout]
+wide = true

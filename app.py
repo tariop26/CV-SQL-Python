@@ -71,7 +71,13 @@ def interactive_timeline():
         yaxis=dict(title='', showticklabels=False),
         showlegend=False,
         margin=dict(l=50, r=50, t=50, b=50),
-        height=400
+        height=400,
+        annotations=[
+            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Expérience'], xanchor='right', yanchor='middle',
+                 text='Expérience', showarrow=False, font=dict(size=12, color='green')),
+            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Formation'], xanchor='right', yanchor='middle',
+                 text='Formation', showarrow=False, font=dict(size=12, color='blue'))
+        ]
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -190,7 +196,7 @@ with tab1:
     with col1:
         interactive_timeline()
     with col2:
-        st.image("avatar-cv-manuel-poirat.jpg", use_column_width=True)  # Remplacez par le chemin de votre image
+        st.image("avatar-cv-manuel-poirat.jpg", height=200, use_column_width=True)  # Remplacez par le chemin de votre image
 
     st.header('Expériences')
     experience_data = fetch_data("SELECT id, job_title AS 'Titre du poste', company AS 'Entreprise', start_date AS 'Date de début', end_date AS 'Date de fin' FROM experience")

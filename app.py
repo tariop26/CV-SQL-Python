@@ -8,6 +8,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import random
 import matplotlib.pyplot as plt
+import seaborn as sns
 import networkx as nx
 from streamlit_folium import st_folium
 import folium
@@ -58,6 +59,12 @@ def skill_distribution():
 
 def skill_heatmap():
     data = fetch_skills_data()
+    if data.empty:
+        st.write("Aucune donnée disponible pour la heatmap.")
+        return
+    if 'skill_name' not in data.columns or 'job_title' not in data.columns or 'count' not in data.columns:
+        st.write("Les colonnes nécessaires pour la heatmap sont manquantes.")
+        return
     heatmap_data = data.pivot("skill_name", "job_title", "count").fillna(0)
     fig, ax = plt.subplots(figsize=(12, 8))
     sns.heatmap(heatmap_data, cmap="YlGnBu", ax=ax)
@@ -229,7 +236,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Analyses", "Carte"])
+tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Carte"])
 
 with tab1:
     st.header('Frise Chronologique des Expériences et Formations')

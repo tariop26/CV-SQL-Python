@@ -71,7 +71,13 @@ def interactive_timeline():
         yaxis=dict(title='', showticklabels=False),
         showlegend=False,
         margin=dict(l=50, r=50, t=50, b=50),
-        height=400
+        height=400,
+        annotations=[
+            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Expérience'], xanchor='right', yanchor='middle',
+                 text='Expérience', showarrow=False, font=dict(size=12, color='green')),
+            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Formation'], xanchor='right', yanchor='middle',
+                 text='Formation', showarrow=False, font=dict(size=12, color='blue'))
+        ]
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -168,7 +174,12 @@ def create_map(data):
     return m
 
 st.set_page_config(layout="wide")
-st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
+col1, col2 = st.columns([4, 1])
+with col1:
+    st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
+with col2:
+    st.image("path/to/your/photo.jpg", use_column_width=True, height=200)  # Remplacez par le chemin de votre image
+
 # Suppression de la barre de navigation
 st.markdown(
     """
@@ -184,8 +195,14 @@ tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Ca
 
 with tab1:
     st.header('Frise Chronologique des Expériences et Formations')
-    interactive_timeline()
-    
+
+    # Utilisation de colonnes pour ajouter la photo en haut à droite
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        interactive_timeline()
+    with col2:
+        st.image("path/to/your/photo.jpg", use_column_width=True, height=200)  # Remplacez par le chemin de votre image
+
     st.header('Expériences')
     experience_data = fetch_data("SELECT id, job_title AS 'Titre du poste', company AS 'Entreprise', start_date AS 'Date de début', end_date AS 'Date de fin' FROM experience")
     experience_data['Compétences'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
@@ -201,6 +218,10 @@ with tab2:
     skill_distribution()
     st.header('Réseau de Compétences')
     skill_network()
+
+with tab3:
+    st.header('Nuage de Mots des Descriptions de Poste')
+    generate_wordcloud()
 
 with tab4:
     st.header('Carte des Lieux où j\'ai Travaillé')

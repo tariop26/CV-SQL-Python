@@ -246,18 +246,10 @@ def employment_duration_histogram():
 
     fig, ax = plt.subplots()
     sns.histplot(data['duration'], bins=10, kde=False, ax=ax)
-    ax.set_title('Histogramme des Durées d\'Emploi')
-    ax.set_xlabel('Durée (mois)')
-    ax.set_ylabel('Nombre d\'emplois')
+    ax.set_title("Histogramme des Durées d'Emploi")
+    ax.set_xlabel("Durée (mois)")
+    ax.set_ylabel("Nombre d'emplois")
     st.pyplot(fig)
-
-    fig.update_layout(
-        title='Top Skills Over Time',
-        xaxis=dict(title='Date'),
-        yaxis=dict(title='Count'),
-        showlegend=True
-    )
-    st.plotly_chart(fig)
 
 def create_map(data):
     m = folium.Map(location=[20, 0], zoom_start=2)

@@ -317,11 +317,11 @@ with tab2:
 
 with tab3:
     st.header('Carte des Lieux où j\'ai Travaillé')
-    location_data = fetch_locations()
-    map_ = create_map(location_data)
-    st_folium(map_, width=1200, height=800)
-    st.markdown(
-            """
-            Quelques mois en Afrique, quelques années aux Etats-Unis et une bonne partie en Rhône-Alpes !
-            """
-        )
+location_data = fetch_locations()
+map_ = create_map(location_data)
+folium_static(map_, width=1200, height=800)
+st.markdown(
+        """
+        Quelques mois en Afrique, quelques années aux Etats-Unis et une bonne partie en Rhône-Alpes !
+        """
+    )

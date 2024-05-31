@@ -48,16 +48,18 @@ def interactive_timeline():
     fig.update_yaxes(categoryorder="category ascending")
     st.plotly_chart(fig)
 
-# Fonction pour créer un nuage de mots
+# Fonction pour créer un nuage de mots alternatif avec matplotlib
 def generate_wordcloud():
     data = fetch_data("SELECT description FROM experience")
     text = ' '.join(data['description'].tolist())
-    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')
-    plt.title('Nuage de Mots des Descriptions de Postes')
-    st.pyplot(plt)
+    words = pd.Series(text.split()).value_counts().head(50)
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    words.plot(kind='barh', ax=ax, color='skyblue')
+    ax.set_title('Top 50 Words in Job Descriptions')
+    ax.set_xlabel('Frequency')
+    ax.set_ylabel('Words')
+    st.pyplot(fig)
 
 # Fonction pour créer un réseau de compétences
 def skill_network():

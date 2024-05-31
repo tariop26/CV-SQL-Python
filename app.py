@@ -42,37 +42,6 @@ def skill_distribution():
     )
     st.altair_chart(fig, use_container_width=True)
 
-def top_skills_over_time():
-    data = fetch_data("""
-        SELECT es.skill_name, e.start_date
-        FROM experience_skills es
-        JOIN experience e ON es.experience_id = e.id
-        UNION ALL
-        SELECT es.skill_name, ed.start_date
-        FROM education_skills es
-        JOIN education ed ON es.education_id = ed.id
-    """)
-    data['start_date'] = pd.to_datetime(data['start_date'])
-    skills_over_time = data.groupby(['start_date', 'skill_name']).size().reset_index(name='count')
-    fig = go.Figure()
-
-    for skill in skills_over_time['skill_name'].unique():
-        skill_data = skills_over_time[skills_over_time['skill_name'] == skill]
-        fig.add_trace(go.Scatter(
-            x=skill_data['start_date'],
-            y=skill_data['count'],
-            mode='lines+markers',
-            name=skill
-        ))
-
-    fig.update_layout(
-        title='Top Skills Over Time',
-        xaxis=dict(title='Date'),
-        yaxis=dict(title='Count'),
-        showlegend=True
-    )
-    st.plotly_chart(fig)
-
 def interactive_timeline():
     timeline_data = fetch_data("""
         SELECT job_title AS label, start_date, end_date, 'Expérience' AS type FROM experience
@@ -105,17 +74,45 @@ def interactive_timeline():
     )
     st.plotly_chart(fig)
 
-def generate_wordcloud():
-    data = fetch_data("SELECT description FROM experience")
-    text = ' '.join(data['description'].tolist())
-    words = pd.Series(text.split()).value_counts().head(50)
-    
-    fig, ax = plt.subplots(figsize=(10, 6))
-    words.plot(kind='barh', ax=ax, color='skyblue')
-    ax.set_title('Top 50 Words in Job Descriptions')
-    ax.set_xlabel('Frequency')
-    ax.set_ylabel('Words')
-    st.pyplot(fig)
+def radar_chart():
+    skills = ['SQL', 'Power BI', 'Wordpress', 'Python', 'Excel', 'Autonomie', 'Travail en équipe', 'Management', 'Organisation de voyages']
+    proficiency = [70, 75, 80, 65, 90, 95, 90, 90, 95]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatterpolar(
+        r=proficiency,
+        theta=skills,
+        fill='toself',
+        name='Proficiency',
+        fillcolor='rgba(0, 191, 255, 0.2)',
+        line=dict(color='rgba(0, 191, 255, 1)')
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100],
+                showticklabels=False,  # Masquer les étiquettes de graduation
+                showline=False,  # Masquer la ligne de l'axe radial
+                ticks=''  # Masquer les graduations sur l'axe radial
+            ),
+            angularaxis=dict(
+                linewidth=1,
+                showline=True,
+                showticklabels=True,
+                color='grey'
+            ),
+            bgcolor='rgba(0,0,0,0)'  # Rendre le fond du radar transparent
+        ),
+        plot_bgcolor='rgba(0,0,0,0)',  # Rendre le fond de la zone de traçage transparent
+        paper_bgcolor='rgba(0,0,0,0)',  # Rendre le fond du papier transparent
+        showlegend=False,
+        title="Compétences et leur Niveau de Maîtrise (%)"
+    )
+
+    st.plotly_chart(fig)
 
 def skill_network():
     data = fetch_data("""
@@ -191,6 +188,37 @@ def fetch_locations():
     }
     return pd.DataFrame(data)
 
+def top_skills_over_time():
+    data = fetch_data("""
+        SELECT es.skill_name, e.start_date
+        FROM experience_skills es
+        JOIN experience e ON es.experience_id = e.id
+        UNION ALL
+        SELECT es.skill_name, ed.start_date
+        FROM education_skills es
+        JOIN education ed ON es.education_id = ed.id
+    """)
+    data['start_date'] = pd.to_datetime(data['start_date'])
+    skills_over_time = data.groupby(['start_date', 'skill_name']).size().reset_index(name='count')
+    fig = go.Figure()
+
+    for skill in skills_over_time['skill_name'].unique():
+        skill_data = skills_over_time[skills_over_time['skill_name'] == skill]
+        fig.add_trace(go.Scatter(
+            x=skill_data['start_date'],
+            y=skill_data['count'],
+            mode='lines+markers',
+            name=skill
+        ))
+
+    fig.update_layout(
+        title='Top Skills Over Time',
+        xaxis=dict(title='Date'),
+        yaxis=dict(title='Count'),
+        showlegend=True
+    )
+    st.plotly_chart(fig)
+
 def create_map(data):
     m = folium.Map(location=[20, 0], zoom_start=2)
     for _, row in data.iterrows():
@@ -222,4 +250,31 @@ with tab1:
     st.write(experience_data, use_container_width=True)
 
     st.header('Formations')
-    education_data = fetch_data("SELECT id, degree AS 'Diplôme', institution AS 'Institution', start_date AS 'Date de début', end_date AS 'Date de fin
+    education_data = fetch_data("SELECT id, degree AS 'Diplôme', institution AS 'Institution', start_date AS 'Date de début', end_date AS 'Date de fin' FROM education")
+    education_data['Compétences'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
+    st.write(education_data, use_container_width=True)
+
+with tab2:
+    st.header('Distribution des Compétences')
+    col1, col2, col3 = st.columns([1, 0.1, 1])
+    
+    with col1:
+        st.subheader('Distribution des Compétences')
+        skill_distribution()
+    
+    with col3:
+        st.subheader('Radar des Compétences')
+        radar_chart()
+        
+    st.header('Réseau de Compétences')
+    skill_network()
+
+with tab3:
+    st.header('Analyse des Compétences')
+    top_skills_over_time()
+
+with tab4:
+    st.header('Carte des Lieux où j\'ai Travaillé')
+    location_data = fetch_locations()
+    map_ = create_map(location_data)
+    st_folium(map_, width=700, height=500)

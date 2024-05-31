@@ -21,6 +21,18 @@ def fetch_data(query):
     conn.close()
     return data
 
+# Fonction pour récupérer les compétences associées
+def fetch_skills_for_item(item_id, item_type):
+    conn = sqlite3.connect('cv_database.db')
+    query = f"""
+        SELECT skill_name
+        FROM {item_type}_skills
+        WHERE {item_type}_id = ?
+    """
+    data = pd.read_sql_query(query, conn, params=(item_id,))
+    conn.close()
+    return data['skill_name'].tolist()
+
 # Fonction pour la distribution des compétences
 def skill_distribution():
     data = fetch_data("""
@@ -42,8 +54,7 @@ def interactive_timeline():
     """)
     timeline_data['start_date'] = pd.to_datetime(timeline_data['start_date'])
     timeline_data['end_date'] = pd.to_datetime(timeline_data['end_date'])
-    fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="type", color="type", text="label",
-                      title="Chronologie Interactive des Expériences et Formations")
+    fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="type", color="type", text="label")
     fig.update_yaxes(categoryorder="category ascending")
     st.plotly_chart(fig)
 

@@ -216,6 +216,30 @@ def create_map(data):
 st.set_page_config(layout="wide")
 st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
 
+def skill_heatmap():
+    data = fetch_skills_data()
+    data['start_date'] = pd.to_datetime(data['start_date'])
+    heatmap_data = data.pivot("skill_name", "start_date", "count").fillna(0)
+    
+    fig, ax = plt.subplots(figsize=(10, 8))
+    sns.heatmap(heatmap_data, cmap="YlGnBu", ax=ax)
+    ax.set_title('Heatmap des Compétences au Fil du Temps')
+    st.pyplot(fig)
+
+st.set_page_config(layout="wide")
+st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
+
+# Suppression de la barre de navigation
+st.markdown(
+    """
+    <style>
+    .css-18e3th9 { visibility: hidden; }
+    .css-1d391kg { visibility: hidden; }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Suppression de la barre de navigation
 st.markdown(
     """
@@ -262,8 +286,8 @@ with tab2:
 
 
 with tab3:
-    st.header('Nuage de Mots des Descriptions de Poste')
-    generate_wordcloud()
+    st.header('Heatmap des Compétences')
+    skill_heatmap()
 
 with tab4:
     st.header('Carte des Lieux où j\'ai Travaillé')

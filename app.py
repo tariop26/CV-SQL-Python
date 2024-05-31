@@ -223,7 +223,7 @@ def employment_duration_histogram():
     data['end_date'] = pd.to_datetime(data['end_date'])
     data['duration'] = (data['end_date'] - data['start_date']).dt.days / 30  # Durée en mois
 
-    fig, ax = plt.subplots(figsize=(3, 2))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
+    fig, ax = plt.subplots(figsize=(0.5,0.3))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
     sns.histplot(data['duration'], bins=10, kde=False, ax=ax)
     ax.set_title("")
     ax.set_xlabel("Nbre de mois)")
@@ -266,7 +266,7 @@ with tab1:
     st.write(education_data, use_container_width=True)
     
     st.header('Histogramme des Durées d\'Emploi')
-    employment_duration_histogram(width=600, height=400)
+    employment_duration_histogram()
 
 with tab2:
     st.header('Un professionnel aux multiples talents')

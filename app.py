@@ -22,164 +22,6 @@ def fetch_data(query):
     conn.close()
     return data
 
-# Fonction pour ajouter une compétence
-def add_skill(skill_name, proficiency):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO skills (skill_name, proficiency)
-        VALUES (?, ?)
-    """, (skill_name, proficiency))
-    conn.commit()
-    conn.close()
-    st.success(f"Skill '{skill_name}' added successfully.")
-
-# Fonction pour ajouter une expérience
-def add_experience(company, job_title, start_date, end_date, description, skills):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO experience (company, job_title, start_date, end_date, description)
-        VALUES (?, ?, ?, ?, ?)
-    """, (company, job_title, start_date, end_date, description))
-    exp_id = cursor.lastrowid
-    for skill in skills:
-        cursor.execute("""
-            INSERT INTO experience_skills (experience_id, skill_name)
-            VALUES (?, ?)
-        """, (exp_id, skill))
-        upsert_skill(skill, calculate_proficiency(start_date))
-    conn.commit()
-    conn.close()
-    st.success(f"Experience '{job_title} at {company}' added successfully.")
-
-# Fonction pour ajouter une formation
-def add_education(institution, degree, start_date, end_date, description, skills):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO education (institution, degree, field_of_study, start_date, end_date, description)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (institution, degree, 'Field of Study', start_date, end_date, description))
-    edu_id = cursor.lastrowid
-    for skill in skills:
-        cursor.execute("""
-            INSERT INTO education_skills (education_id, skill_name)
-            VALUES (?, ?)
-        """, (edu_id, skill))
-        upsert_skill(skill, calculate_proficiency(start_date))
-    conn.commit()
-    conn.close()
-    st.success(f"Education '{degree} at {institution}' added successfully.")
-
-# Fonction pour mettre à jour une expérience
-def update_experience(job_title, end_date, description, skills, exp_id):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE experience
-        SET job_title = ?, end_date = ?, description = ?
-        WHERE id = ?
-    """, (job_title, end_date, description, exp_id))
-    cursor.execute("""
-        DELETE FROM experience_skills WHERE experience_id = ?
-    """, (exp_id,))
-    for skill in skills:
-        cursor.execute("""
-            INSERT INTO experience_skills (experience_id, skill_name)
-            VALUES (?, ?)
-        """, (exp_id, skill))
-        upsert_skill(skill, calculate_proficiency(end_date))
-    conn.commit()
-    conn.close()
-    st.success(f"Experience with id {exp_id} updated successfully.")
-
-# Fonction pour mettre à jour une formation
-def update_education(degree, end_date, description, skills, edu_id):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE education
-        SET degree = ?, end_date = ?, description = ?
-        WHERE id = ?
-    """, (degree, end_date, description, edu_id))
-    cursor.execute("""
-        DELETE FROM education_skills WHERE education_id = ?
-    """, (edu_id,))
-    for skill in skills:
-        cursor.execute("""
-            INSERT INTO education_skills (education_id, skill_name)
-            VALUES (?, ?)
-        """, (edu_id, skill))
-        upsert_skill(skill, calculate_proficiency(end_date))
-    conn.commit()
-    conn.close()
-    st.success(f"Education with id {edu_id} updated successfully.")
-
-# Fonction pour supprimer une expérience
-def delete_experience(exp_id):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        DELETE FROM experience WHERE id = ?
-    """, (exp_id,))
-    cursor.execute("""
-        DELETE FROM experience_skills WHERE experience_id = ?
-    """, (exp_id,))
-    conn.commit()
-    conn.close()
-    st.success(f"Experience with id {exp_id} deleted successfully.")
-
-# Fonction pour supprimer une formation
-def delete_education(edu_id):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("""
-        DELETE FROM education WHERE id = ?
-    """, (edu_id,))
-    cursor.execute("""
-        DELETE FROM education_skills WHERE education_id = ?
-    """, (edu_id,))
-    conn.commit()
-    conn.close()
-    st.success(f"Education with id {edu_id} deleted successfully.")
-
-# Fonction pour récupérer les compétences associées
-def fetch_skills_for_item(item_id, item_type):
-    conn = sqlite3.connect('cv_database.db')
-    query = f"""
-        SELECT skill_name
-        FROM {item_type}_skills
-        WHERE {item_type}_id = ?
-    """
-    data = pd.read_sql_query(query, conn, params=(item_id,))
-    conn.close()
-    return data['skill_name'].tolist()
-
-# Fonction pour calculer la proficiency
-def calculate_proficiency(start_date):
-    if start_date < '2019-01-01':
-        return 4
-    elif start_date < '2022-01-01':
-        return 3
-    else:
-        return 2
-
-# Fonction pour insérer ou mettre à jour les compétences
-def upsert_skill(skill_name, proficiency):
-    conn = sqlite3.connect('cv_database.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT proficiency FROM skills WHERE skill_name = ?", (skill_name,))
-    row = cursor.fetchone()
-    if row is None:
-        cursor.execute("INSERT INTO skills (skill_name, proficiency) VALUES (?, ?)", (skill_name, proficiency))
-    else:
-        current_proficiency = row[0]
-        if proficiency > current_proficiency:
-            cursor.execute("UPDATE skills SET proficiency = ? WHERE skill_name = ?", (proficiency, skill_name))
-    conn.commit()
-    conn.close()
-
 # Fonction pour la distribution des compétences
 def skill_distribution():
     data = fetch_data("""
@@ -277,7 +119,6 @@ def skill_network():
 # Fonction pour créer une carte des lieux
 def location_map():
     data = fetch_data("SELECT company, job_title, description FROM experience")
-    # Remplacer par les coordonnées réelles des lieux où vous avez travaillé
     locations = {
         'COMMUNAUTÉ AGGLOMÉRATION PAYS VOIRONNAIS - SERVICE TOURISME': [45.3674, 5.5939],
         'DÉVELOPPEUR WORDPRESS INDÉPENDANT': [39.7392, -104.9903],  # Exemple de localisation à Denver
@@ -387,29 +228,45 @@ if role:
             add_skill(new_skill_name, new_proficiency)
 
     # Tableau de bord interactif pour les utilisateurs
-    if role == "user":
+    else:
+        st.header('CV de Manuel Poirat - Formations et expériences professionnelles')
+        st.image("https://path_to_your_image.jpg", width=200)
         st.markdown("[Télécharger mon CV au format PDF](https://tariop26.github.io/)")
-        
+
         # Ajouter des onglets de navigation
-        tab1, tab2, tab3, tab4, tab5 = st.tabs(['Distribution des Compétences', 'Chronologie Interactive', 'Nuage de Mots', 'Réseau de Compétences', 'Carte des Lieux'])
+        tab1, tab2, tab3, tab4 = st.tabs(['Chronologie & Récapitulatif', 'Compétences', 'Analyses & Nuage de Mots', 'Carte des Lieux'])
         
         with tab1:
-            st.header('Distribution des Compétences')
-            skill_distribution()
-        
-        with tab2:
             st.header('Chronologie Interactive')
             interactive_timeline()
+            
+            st.header('Expériences')
+            experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date, description FROM experience")
+            experience_data['skills'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
+            experience_data = experience_data.loc[:, experience_data.columns != experience_data.columns[0]]  # Supprimer la première colonne sans en-tête
+            st.write(experience_data)
+
+            st.header('Formations')
+            education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date, description FROM education")
+            education_data['skills'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
+            education_data = education_data.loc[:, education_data.columns != education_data.columns[0]]  # Supprimer la première colonne sans en-tête
+            st.write(education_data)
+
+        with tab2:
+            st.header('Distribution des Compétences')
+            skill_distribution()
+            
+            st.header('Réseau de Compétences')
+            skill_network()
         
         with tab3:
             st.header('Nuage de Mots des Descriptions de Postes')
             generate_wordcloud()
+
+            st.header('Heatmap des Compétences')
+            skill_heatmap()
         
         with tab4:
-            st.header('Réseau de Compétences')
-            skill_network()
-        
-        with tab5:
             st.header('Carte des Lieux où J\'ai Travaillé')
             location_map()
 

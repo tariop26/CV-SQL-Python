@@ -10,6 +10,46 @@ import folium
 import altair as alt
 from auth import authenticate
 
+def radar_chart():
+    skills = ['SQL', 'Power BI', 'Wordpress', 'Python', 'Excel', 'Autonomie', 'Travail en équipe', 'Management', 'Organisation de voyages']
+    proficiency = [70, 75, 80, 65, 90, 95, 90, 90, 95]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatterpolar(
+        r=proficiency,
+        theta=skills,
+        fill='toself',
+        name='Proficiency',
+        fillcolor='rgba(0, 191, 255, 0.2)',
+        line=dict(color='rgba(0, 191, 255, 1)')
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100],
+                showticklabels=False,  # Masquer les étiquettes de graduation
+                showline=False,  # Masquer la ligne de l'axe radial
+                ticks=''  # Masquer les graduations sur l'axe radial
+            ),
+            angularaxis=dict(
+                linewidth=1,
+                showline=True,
+                showticklabels=True,
+                color='grey'
+            ),
+            bgcolor='rgba(0,0,0,0)'  # Rendre le fond du radar transparent
+        ),
+        plot_bgcolor='rgba(0,0,0,0)',  # Rendre le fond de la zone de traçage transparent
+        paper_bgcolor='rgba(0,0,0,0)',  # Rendre le fond du papier transparent
+        showlegend=False,
+        title="Compétences et leur Niveau de Maîtrise (%)"
+    )
+
+    st.plotly_chart(fig)
+
 def fetch_skills_for_item(item_id, item_type):
     conn = sqlite3.connect('cv_database.db')
     query = f"""
@@ -172,37 +212,6 @@ def create_map(data):
     for _, row in data.iterrows():
         folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
     return m
-
-def radar_chart():
-    skills = ['SQL', 'Power BI', 'Wordpress', 'Python', 'Excel', 'Autonomie', 'Travail en équipe', 'Management', 'Organisation de voyages']
-    proficiency = [70, 75, 80, 65, 90, 95, 90, 90, 95]
-
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatterpolar(
-        r=proficiency,
-        theta=skills,
-        fill='toself',
-        name='Proficiency',
-        fillcolor='rgba(0, 191, 255, 0.2)',
-        line=dict(color='rgba(0, 191, 255, 1)')
-    ))
-
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100]
-            )
-        ),
-        showlegend=False,
-        title="Radar des Compétences",
-        margin=dict(l=20, r=20, t=20, b=20),
-        paper_bgcolor='rgba(0, 0, 0, 0)',
-        plot_bgcolor='rgba(0, 0, 0, 0)'
-    )
-
-    st.plotly_chart(fig)
 
 st.set_page_config(layout="wide")
 st.title('CV de Manuel Poirat - Formations et expériences professionnelles')

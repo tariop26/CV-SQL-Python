@@ -1,4 +1,8 @@
 import streamlit as st
+
+# Appeler st.set_page_config au tout début
+st.set_page_config(layout="wide")
+
 import sqlite3
 import pandas as pd
 import plotly.graph_objects as go
@@ -52,12 +56,10 @@ def interactive_timeline():
     fig = go.Figure()
     colors = {'Expérience': 'green', 'Formation': 'blue'}
 
-    y_positions = {'Expérience': 0.5, 'Formation': 0.55}  # Ajuster les positions y ici
-
     for _, row in timeline_data.iterrows():
         fig.add_trace(go.Scatter(
             x=[row['start_date'], row['end_date']],
-            y=[y_positions[row['type']], y_positions[row['type']]],
+            y=[row['type'], row['type']],
             mode='lines+markers',
             line=dict(color=colors[row['type']], width=2),
             marker=dict(size=10),
@@ -68,30 +70,12 @@ def interactive_timeline():
     fig.update_layout(
         title='Chronologie Interactive des Expériences et Formations',
         xaxis=dict(title='Date'),
-        yaxis=dict(title='', showticklabels=False),
+        yaxis=dict(title=''),
         showlegend=False,
         margin=dict(l=50, r=50, t=50, b=50),
-        height=400,
-        annotations=[
-            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Expérience'], xanchor='right', yanchor='middle',
-                 text='Expérience', showarrow=False, font=dict(size=12, color='green')),
-            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Formation'], xanchor='right', yanchor='middle',
-                 text='Formation', showarrow=False, font=dict(size=12, color='blue'))
-        ]
+        height=400
     )
     st.plotly_chart(fig)
-
-def generate_wordcloud():
-    data = fetch_data("SELECT description FROM experience")
-    text = ' '.join(data['description'].tolist())
-    words = pd.Series(text.split()).value_counts().head(50)
-    
-    fig, ax = plt.subplots(figsize=(10, 6))
-    words.plot(kind='barh', ax=ax, color='skyblue')
-    ax.set_title('Top 50 Words in Job Descriptions')
-    ax.set_xlabel('Frequency')
-    ax.set_ylabel('Words')
-    st.pyplot(fig)
 
 def skill_network():
     data = fetch_data("""
@@ -153,28 +137,42 @@ def skill_network():
                         title='Réseau de Compétences',
                         showlegend=False,
                         hovermode='closest',
-                        margin=dict(b=20,l=5,r=5,t=40),
+                        margin=dict(b=20, l=5, r=5, t=40),
                         height=800,  # Augmenter la hauteur ici
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
     st.plotly_chart(fig)
 
+def fetch_locations():
+    data = {
+        "Lieu": ["Voiron, France", "Denver, Colorado, USA", "Drôme, France", "Font-Romeu, France", "Divonne-les-Bains, France", "Lyon, France", "Tanzanie", "Afrique du Sud", "Mâcon, France", "Courchevel, France"],
+        "Latitude": [45.367, 39.7392, 44.7631, 42.5037, 46.356, 45.764, -6.369, -30.5595, 46.306, 45.414],
+        "Longitude": [5.5788, -104.9903, 5.424, 1.982, 6.139, 4.835, 34.8888, 22.9375, 4.830, 6.631]
+    }
+    return pd.DataFrame(data)
+
+def create_map(data):
+    m = folium.Map(location=[20, 0], zoom_start=2)
+    for _, row in data.iterrows():
+        folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
+    return m
+
 def radar_chart():
-    skills = ['SQL', 'Power BI', 'Wordpress', 'Python', 'Excel', 'Autonomie', 'Travail en équipe', 'Management', 'Organisation de voyages']
-    proficiency = [70, 75, 80, 65, 90, 95, 90, 90, 95]
+    skills_data = {
+        'Competence': ['SQL', 'Power BI', 'Wordpress', 'Python', 'Excel', 'Autonomie', 'Travail en équipe', 'Management', 'Organisation de voyages'],
+        'Proficiency': [70, 75, 80, 65, 90, 95, 90, 90, 95]
+    }
+    df_skills = pd.DataFrame(skills_data)
 
-    fig = go.Figure()
+    radar_fig = go.Figure()
 
-    fig.add_trace(go.Scatterpolar(
-        r=proficiency,
-        theta=skills,
-        fill='toself',
-        name='Proficiency',
-        fillcolor='rgba(0, 191, 255, 0.2)',
-        line=dict(color='rgba(0, 191, 255, 1)')
+    radar_fig.add_trace(go.Scatterpolar(
+        r=df_skills['Proficiency'],
+        theta=df_skills['Competence'],
+        fill='toself'
     ))
 
-    fig.update_layout(
+    radar_fig.update_layout(
         polar=dict(
             radialaxis=dict(
                 visible=True,
@@ -197,23 +195,8 @@ def radar_chart():
         title="Compétences et leur Niveau de Maîtrise (%)"
     )
 
-    st.plotly_chart(fig)
+    st.plotly_chart(radar_fig)
 
-def fetch_locations():
-    data = {
-        "Lieu": ["Voiron, France", "Denver, Colorado, USA", "Drôme, France", "Font-Romeu, France", "Divonne-les-Bains, France", "Lyon, France", "Tanzanie", "Afrique du Sud", "Mâcon, France", "Courchevel, France"],
-        "Latitude": [45.367, 39.7392, 44.7631, 42.5037, 46.356, 45.764, -6.369, -30.5595, 46.306, 45.414],
-        "Longitude": [5.5788, -104.9903, 5.424, 1.982, 6.139, 4.835, 34.8888, 22.9375, 4.830, 6.631]
-    }
-    return pd.DataFrame(data)
-
-def create_map(data):
-    m = folium.Map(location=[20, 0], zoom_start=2)
-    for _, row in data.iterrows():
-        folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
-    return m
-
-st.set_page_config(layout="wide")
 st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
 
 # Suppression de la barre de navigation
@@ -227,7 +210,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Carte"])
+tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Analyses", "Carte"])
 
 with tab1:
     st.header('Frise Chronologique des Expériences et Formations')
@@ -244,7 +227,7 @@ with tab1:
     st.write(education_data, use_container_width=True)
 
 with tab2:
-    col1, col2, col3 = st.columns([3, 1, 3])  # Ajuster les largeurs des colonnes ici
+    col1, col2, col3 = st.columns([2, 0.1, 2])  # Ajuster les largeurs des colonnes ici
 
     with col1:
         st.header('Distribution des Compétences')
@@ -261,8 +244,8 @@ with tab2:
     skill_network()
 
 with tab3:
-    st.header('Nuage de Mots des Descriptions de Poste')
-    generate_wordcloud()
+    st.header('Heatmap des Compétences')
+    skill_heatmap()
 
 with tab4:
     st.header('Carte des Lieux où j\'ai Travaillé')

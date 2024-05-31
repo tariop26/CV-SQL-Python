@@ -231,7 +231,7 @@ def employment_duration_histogram():
     st.pyplot(fig)
 
 def create_map(data):
-    m = folium.Map(location=[45.764, 4.8357], zoom_start=1)  # Centré sur la France par défaut
+    m = folium.Map(location=[45.764, 4.8357], zoom_start=3)  # Centré sur la France par défaut
     for _, row in data.iterrows():
         folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
     return m

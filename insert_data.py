@@ -112,6 +112,22 @@ experiences = [
         "end_date": "2007-03-01",
         "description": "Responsable du jardin d'enfants, aide-moniteur, création d'événements.Courchevel",
         "skills": ["Travail en équipe"]
+    },
+    {
+        "company": "STAGE - THE WORLD OUTDOORS - BOULDER (COLORADO USA)",
+        "job_title": "Stage organisation de voyages",
+        "start_date": "2006-04-01",
+        "end_date": "2006-08-30",
+        "description": "Stage dans un tour-operator à Boudler au Colorado. Organisation de voyages, logistique, accompagnement",
+        "skills": ["Travail en équipe","Organisation de voyages"]
+    },
+    {
+        "company": "MARE AUX CROCODILES DE BAZOULE (BURKINA FASO)",
+        "job_title": "Stage développement touristique",
+        "start_date": "2005-04-01",
+        "end_date": "2005-06-30",
+        "description": "Réflexion sur le développement du tourisme de la mare aux crocodiles de Bazoulé au Burkina Faso",
+        "skills": ["Travail en équipe", "Autonomie","Organisation de voyages"]
     }
 ]
 

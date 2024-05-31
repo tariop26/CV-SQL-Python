@@ -77,18 +77,6 @@ def interactive_timeline():
     )
     st.plotly_chart(fig)
 
-def generate_wordcloud():
-    data = fetch_data("SELECT description FROM experience")
-    text = ' '.join(data['description'].tolist())
-    words = pd.Series(text.split()).value_counts().head(50)
-    
-    fig, ax = plt.subplots(figsize=(10, 6))
-    words.plot(kind='barh', ax=ax, color='skyblue')
-    ax.set_title('Top 50 Words in Job Descriptions')
-    ax.set_xlabel('Frequency')
-    ax.set_ylabel('Words')
-    st.pyplot(fig)
-
 def skill_network():
     data = fetch_data("""
         SELECT e.job_title, es.skill_name

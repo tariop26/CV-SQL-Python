@@ -167,9 +167,6 @@ def skill_heatmap():
     ax.set_title('Heatmap des Compétences au Fil du Temps')
     st.pyplot(fig)
 
-st.set_page_config(layout="wide")
-st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
-
 # Suppression de la barre de navigation
 st.markdown(
     """

@@ -37,7 +37,7 @@ def skill_distribution():
         GROUP BY es.skill_name
     """)
     fig = alt.Chart(data).mark_bar().encode(
-        x=alt.X('count:Q', axis=alt.Axis(title=None, labels=True)),
+        x=alt.X('count:Q', axis=alt.Axis(title=None, labels=True, tickMinStep=1)),
         y=alt.Y('skill_name:N', axis=alt.Axis(title=None, labels=True, ticks=True, domain=True))
     ).properties(
         title=''
@@ -223,7 +223,7 @@ def employment_duration_histogram():
     data['end_date'] = pd.to_datetime(data['end_date'])
     data['duration'] = (data['end_date'] - data['start_date']).dt.days / 30  # Durée en mois
 
-    fig, ax = plt.subplots(figsize=(6, 4))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
+    fig, ax = plt.subplots(figsize=(3, 2))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
     sns.histplot(data['duration'], bins=10, kde=False, ax=ax)
     ax.set_title("Histogramme des Durées d'Emploi")
     ax.set_xlabel("Durée (mois)")

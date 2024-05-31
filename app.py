@@ -31,6 +31,17 @@ def fetch_data(query):
     conn.close()
     return data
 
+def fetch_skills_data():
+    conn = sqlite3.connect('cv_database.db')
+    data = pd.read_sql_query("""
+        SELECT es.skill_name, e.job_title, COUNT(*) as count
+        FROM experience_skills es
+        JOIN experience e ON es.experience_id = e.id
+        GROUP BY es.skill_name, e.job_title
+    """, conn)
+    conn.close()
+    return data
+
 def skill_distribution():
     data = fetch_data("""
         SELECT es.skill_name, COUNT(*) as count
@@ -44,6 +55,14 @@ def skill_distribution():
         title='Distribution des Compétences'
     )
     st.altair_chart(fig, use_container_width=True)
+
+def skill_heatmap():
+    data = fetch_skills_data()
+    heatmap_data = data.pivot("skill_name", "job_title", "count").fillna(0)
+    fig, ax = plt.subplots(figsize=(12, 8))
+    sns.heatmap(heatmap_data, cmap="YlGnBu", ax=ax)
+    plt.title('Heatmap des Compétences par Poste')
+    st.pyplot(fig)
 
 def interactive_timeline():
     timeline_data = fetch_data("""
@@ -157,27 +176,6 @@ def create_map(data):
         folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
     return m
 
-def skill_heatmap():
-    data = fetch_skills_data()
-    data['start_date'] = pd.to_datetime(data['start_date'])
-    heatmap_data = data.pivot("skill_name", "start_date", "count").fillna(0)
-    
-    fig, ax = plt.subplots(figsize=(10, 8))
-    sns.heatmap(heatmap_data, cmap="YlGnBu", ax=ax)
-    ax.set_title('Heatmap des Compétences au Fil du Temps')
-    st.pyplot(fig)
-
-# Suppression de la barre de navigation
-st.markdown(
-    """
-    <style>
-    .css-18e3th9 { visibility: hidden; }
-    .css-1d391kg { visibility: hidden; }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 def radar_chart():
     skills_data = {
         'Competence': ['SQL', 'Power BI', 'Wordpress', 'Python', 'Excel', 'Autonomie', 'Travail en équipe', 'Management', 'Organisation de voyages'],
@@ -265,7 +263,7 @@ with tab2:
     skill_network()
 
 with tab3:
-    st.header('Heatmap des Compétences')
+    st.header('Heatmap des Compétences par Poste')
     skill_heatmap()
 
 with tab4:

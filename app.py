@@ -146,9 +146,11 @@ def skill_network():
                         showlegend=False,
                         hovermode='closest',
                         margin=dict(b=20,l=5,r=5,t=40),
+                        height=800,  # Augmenter la hauteur ici
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
     st.plotly_chart(fig)
+
 
 def location_map():
     data = fetch_data("SELECT company, job_title, description FROM experience")

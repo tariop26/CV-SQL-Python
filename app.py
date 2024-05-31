@@ -1,14 +1,9 @@
 import streamlit as st
-
-# Appeler st.set_page_config au tout début
-st.set_page_config(layout="wide")
-
 import sqlite3
 import pandas as pd
 import plotly.graph_objects as go
 import random
 import matplotlib.pyplot as plt
-import seaborn as sns
 import networkx as nx
 from streamlit_folium import st_folium
 import folium
@@ -32,17 +27,6 @@ def fetch_data(query):
     conn.close()
     return data
 
-def fetch_skills_data():
-    conn = sqlite3.connect('cv_database.db')
-    data = pd.read_sql_query("""
-        SELECT es.skill_name, e.job_title, COUNT(*) as count
-        FROM experience_skills es
-        JOIN experience e ON es.experience_id = e.id
-        GROUP BY es.skill_name, e.job_title
-    """, conn)
-    conn.close()
-    return data
-
 def skill_distribution():
     data = fetch_data("""
         SELECT es.skill_name, COUNT(*) as count
@@ -58,17 +42,16 @@ def skill_distribution():
     st.altair_chart(fig, use_container_width=True)
 
 def skill_heatmap():
-    data = fetch_skills_data()
-    if data.empty:
-        st.write("Aucune donnée disponible pour la heatmap.")
-        return
-    if 'skill_name' not in data.columns or 'job_title' not in data.columns or 'count' not in data.columns:
-        st.write("Les colonnes nécessaires pour la heatmap sont manquantes.")
-        return
+    data = fetch_data("""
+        SELECT es.skill_name, e.job_title, COUNT(*) as count
+        FROM experience_skills es
+        JOIN experience e ON es.experience_id = e.id
+        GROUP BY es.skill_name, e.job_title
+    """)
     heatmap_data = data.pivot("skill_name", "job_title", "count").fillna(0)
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(10, 8))
     sns.heatmap(heatmap_data, cmap="YlGnBu", ax=ax)
-    plt.title('Heatmap des Compétences par Poste')
+    ax.set_title('Heatmap des Compétences par Poste')
     st.pyplot(fig)
 
 def interactive_timeline():
@@ -96,12 +79,24 @@ def interactive_timeline():
     fig.update_layout(
         title='Chronologie Interactive des Expériences et Formations',
         xaxis=dict(title='Date'),
-        yaxis=dict(title=''),
+        yaxis=dict(title='', tickvals=['Expérience', 'Formation']),
         showlegend=False,
         margin=dict(l=50, r=50, t=50, b=50),
         height=400
     )
     st.plotly_chart(fig)
+
+def generate_wordcloud():
+    data = fetch_data("SELECT description FROM experience")
+    text = ' '.join(data['description'].tolist())
+    words = pd.Series(text.split()).value_counts().head(50)
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    words.plot(kind='barh', ax=ax, color='skyblue')
+    ax.set_title('Top 50 Words in Job Descriptions')
+    ax.set_xlabel('Frequency')
+    ax.set_ylabel('Words')
+    st.pyplot(fig)
 
 def skill_network():
     data = fetch_data("""
@@ -163,11 +158,12 @@ def skill_network():
                         title='Réseau de Compétences',
                         showlegend=False,
                         hovermode='closest',
-                        margin=dict(b=20, l=5, r=5, t=40),
+                        margin=dict(b=20,l=5,r=5,t=40),
                         height=800,  # Augmenter la hauteur ici
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
     st.plotly_chart(fig)
+
 
 def fetch_locations():
     data = {
@@ -183,48 +179,8 @@ def create_map(data):
         folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
     return m
 
-def radar_chart():
-    skills_data = {
-        'Competence': ['SQL', 'Power BI', 'Wordpress', 'Python', 'Excel', 'Autonomie', 'Travail en équipe', 'Management', 'Organisation de voyages'],
-        'Proficiency': [70, 75, 80, 65, 90, 95, 90, 90, 95]
-    }
-    df_skills = pd.DataFrame(skills_data)
-
-    radar_fig = go.Figure()
-
-    radar_fig.add_trace(go.Scatterpolar(
-        r=df_skills['Proficiency'],
-        theta=df_skills['Competence'],
-        fill='toself'
-    ))
-
-    radar_fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100],
-                showticklabels=False,  # Masquer les étiquettes de graduation
-                showline=False,  # Masquer la ligne de l'axe radial
-                ticks=''  # Masquer les graduations sur l'axe radial
-            ),
-            angularaxis=dict(
-                linewidth=1,
-                showline=True,
-                showticklabels=True,
-                color='grey'
-            ),
-            bgcolor='rgba(0,0,0,0)'  # Rendre le fond du radar transparent
-        ),
-        plot_bgcolor='rgba(0,0,0,0)',  # Rendre le fond de la zone de traçage transparent
-        paper_bgcolor='rgba(0,0,0,0)',  # Rendre le fond du papier transparent
-        showlegend=False,
-        title="Compétences et leur Niveau de Maîtrise (%)"
-    )
-
-    st.plotly_chart(radar_fig)
-
+st.set_page_config(layout="wide")
 st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
-
 # Suppression de la barre de navigation
 st.markdown(
     """
@@ -253,29 +209,49 @@ with tab1:
     st.write(education_data, use_container_width=True)
 
 with tab2:
-    col1, col2, col3 = st.columns([2, 0.1, 2])  # Ajuster les largeurs des colonnes ici
-
+    st.header('Distribution des Compétences')
+    col1, col2, col3 = st.columns([1, 0.1, 1])
+    
     with col1:
-        st.header('Distribution des Compétences')
         skill_distribution()
     
-    with col2:
-        st.write("")  # Colonne intermédiaire vide et étroite
-        
     with col3:
-        st.header('Radar des Compétences')
-        radar_chart()
+        radar_fig = go.Figure()
 
+        radar_fig.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, 100],
+                    showticklabels=False,  # Masquer les étiquettes de graduation
+                    showline=False,  # Masquer la ligne de l'axe radial
+                    ticks=''  # Masquer les graduations sur l'axe radial
+                ),
+                angularaxis=dict(
+                    linewidth=1,
+                    showline=True,
+                    showticklabels=True,
+                    color='grey'
+                ),
+                bgcolor='rgba(0,0,0,0)'  # Rendre le fond du radar transparent
+            ),
+            plot_bgcolor='rgba(0,0,0,0)',  # Rendre le fond de la zone de traçage transparent
+            paper_bgcolor='rgba(0,0,0,0)',  # Rendre le fond du papier transparent
+            showlegend=False,
+            title="Compétences et leur Niveau de Maîtrise (%)"
+        )
+
+        st.plotly_chart(radar_fig)
+        
     st.header('Réseau de Compétences')
     skill_network()
 
 with tab3:
-    st.header('Heatmap des Compétences par Poste')
+    st.header('Analyse de Compétences')
     skill_heatmap()
 
 with tab4:
     st.header('Carte des Lieux où j\'ai Travaillé')
-    
     location_data = fetch_locations()
     map_ = create_map(location_data)
     st_folium(map_, width=700, height=500)

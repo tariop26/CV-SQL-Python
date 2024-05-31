@@ -225,8 +225,8 @@ def employment_duration_histogram():
 
     fig, ax = plt.subplots(figsize=(3, 2))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
     sns.histplot(data['duration'], bins=10, kde=False, ax=ax)
-    ax.set_title("Histogramme des Durées d'Emploi")
-    ax.set_xlabel("Durée (mois)")
+    ax.set_title("")
+    ax.set_xlabel("Nbre de mois)")
     ax.set_ylabel("Nombre d'emplois")
     st.pyplot(fig)
 
@@ -266,7 +266,7 @@ with tab1:
     st.write(education_data, use_container_width=True)
     
     st.header('Histogramme des Durées d\'Emploi')
-    employment_duration_histogram()
+    employment_duration_histogram(width=600, height=400)
 
 with tab2:
     st.header('Un professionnel aux multiples talents')

@@ -1,21 +1,15 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
+import random
 import matplotlib.pyplot as plt
 import networkx as nx
-import folium
 from streamlit_folium import st_folium
+import folium
+import altair as alt
+from auth import authenticate
 
-# Fonction pour obtenir les données d'une requête SQL
-def fetch_data(query):
-    conn = sqlite3.connect('cv_database.db')
-    data = pd.read_sql_query(query, conn)
-    conn.close()
-    return data
-
-# Fonction pour obtenir les compétences
 def fetch_skills_for_item(item_id, item_type):
     conn = sqlite3.connect('cv_database.db')
     query = f"""
@@ -27,169 +21,138 @@ def fetch_skills_for_item(item_id, item_type):
     conn.close()
     return data['skill_name'].tolist()
 
-# Configuration de la page
-st.set_page_config(layout="wide")
+def fetch_data(query):
+    conn = sqlite3.connect('cv_database.db')
+    data = pd.read_sql_query(query, conn)
+    conn.close()
+    return data
 
-# Navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Aller à", ["Accueil", "Compétences", "Descriptions", "Carte"])
+def skill_distribution():
+    data = fetch_data("""
+        SELECT es.skill_name, COUNT(*) as count
+        FROM experience_skills es
+        GROUP BY es.skill_name
+    """)
+    fig = alt.Chart(data).mark_bar().encode(
+        x='count:Q',
+        y=alt.Y('skill_name:N', sort='-x')
+    ).properties(
+        title='Distribution des Compétences'
+    )
+    st.altair_chart(fig, use_container_width=True)
 
-# Page d'accueil
-if page == "Accueil":
-    st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
-
-    st.header('Frise Chronologique des Expériences et Formations')
-    
-    # Récupérer les expériences
-    experiences = fetch_data("SELECT job_title, company, start_date, end_date FROM experience")
-    experiences['type'] = 'Expérience'
-    experiences['y'] = 'Expérience'
-    experiences['color'] = 'blue'
-
-    # Récupérer les formations
-    educations = fetch_data("SELECT degree AS job_title, institution AS company, start_date, end_date FROM education")
-    educations['type'] = 'Formation'
-    educations['y'] = 'Formation'
-    educations['color'] = 'red'
-
-    # Combiner les deux DataFrames
-    timeline_data = pd.concat([experiences, educations], ignore_index=True)
+def interactive_timeline():
+    timeline_data = fetch_data("""
+        SELECT job_title AS label, start_date, end_date, 'Expérience' AS type FROM experience
+        UNION ALL
+        SELECT degree AS label, start_date, end_date, 'Formation' AS type FROM education
+    """)
     timeline_data['start_date'] = pd.to_datetime(timeline_data['start_date'])
     timeline_data['end_date'] = pd.to_datetime(timeline_data['end_date'])
-    timeline_data['label'] = timeline_data.apply(lambda row: f"{row['job_title']} at {row['company']}", axis=1)
+    fig = go.Figure()
+    colors = {'Expérience': 'green', 'Formation': 'blue'}
 
-    fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="y", color="type", text="label",
-                      color_discrete_map={'Formation': 'red', 'Expérience': 'blue'})
-    
+    for _, row in timeline_data.iterrows():
+        fig.add_trace(go.Scatter(
+            x=[row['start_date'], row['end_date']],
+            y=[row['type'], row['type']],
+            mode='lines+markers',
+            line=dict(color=colors[row['type']], width=2),
+            marker=dict(size=10),
+            text=row['label'],
+            hoverinfo='text'
+        ))
+
     fig.update_layout(
-        yaxis_title="",
-        xaxis_title="",
-        yaxis=dict(ticktext=['Formation', 'Expérience'], tickvals=['Formation', 'Expérience']),
-        margin=dict(l=20, r=20, t=40, b=20),
+        title='Chronologie Interactive des Expériences et Formations',
+        xaxis=dict(title='Date'),
+        yaxis=dict(title=''),
+        showlegend=False,
+        margin=dict(l=50, r=50, t=50, b=50),
         height=400
     )
+    st.plotly_chart(fig)
 
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.header('Expériences')
-    experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")
-    experience_data['Compétences'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
-    st.write(experience_data.rename(columns={
-        'job_title': 'Titre du poste',
-        'company': 'Entreprise',
-        'start_date': 'Date de début',
-        'end_date': 'Date de fin'
-    }))
-
-    st.header('Formations')
-    education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date FROM education")
-    education_data['Compétences'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
-    st.write(education_data.rename(columns={
-        'job_title': 'Diplôme',
-        'company': 'Institution',
-        'start_date': 'Date de début',
-        'end_date': 'Date de fin'
-    }))
-
-# Page des compétences
-elif page == "Compétences":
-    st.header('Distribution des Compétences')
-    skills_data = fetch_data("SELECT skill_name AS Compétence, proficiency AS Maîtrise FROM skills")
-    st.bar_chart(skills_data.set_index('Compétence'))
-
-    st.header('Réseau de Compétences')
-    def skill_network():
-        skills = fetch_data("SELECT skill_name FROM skills")
-        skill_list = skills['skill_name'].tolist()
-        G = nx.Graph()
-        
-        for skill in skill_list:
-            G.add_node(skill)
-        
-        for exp_id in fetch_data("SELECT id FROM experience")['id']:
-            exp_skills = fetch_skills_for_item(exp_id, 'experience')
-            for i in range(len(exp_skills)):
-                for j in range(i + 1, len(exp_skills)):
-                    G.add_edge(exp_skills[i], exp_skills[j])
-        
-        pos = nx.spring_layout(G, k=0.5, iterations=50)
-        edge_x = []
-        edge_y = []
-        
-        for edge in G.edges():
-            x0, y0 = pos[edge[0]]
-            x1, y1 = pos[edge[1]]
-            edge_x.extend([x0, x1, None])
-            edge_y.extend([y0, y1, None])
-        
-        edge_trace = go.Scatter(
-            x=edge_x, y=edge_y,
-            line=dict(width=0.5, color='#888'),
-            hoverinfo='none',
-            mode='lines'
-        )
-        
-        node_x = []
-        node_y = []
-        node_text = []
-        
-        for node in G.nodes():
-            x, y = pos[node]
-            node_x.append(x)
-            node_y.append(y)
-            node_text.append(node)
-        
-        node_trace = go.Scatter(
-            x=node_x, y=node_y,
-            mode='markers+text',
-            text=node_text,
-            textposition="top center",
-            hoverinfo='text',
-            marker=dict(
-                showscale=True,
-                colorscale='YlGnBu',
-                size=10,
-                color=[],
-                line_width=2
-            )
-        )
-        
-        fig = go.Figure(data=[edge_trace, node_trace],
-                        layout=go.Layout(
-                            title='Réseau de Compétences',
-                            showlegend=False,
-                            hovermode='closest',
-                            margin=dict(b=20, l=5, r=5, t=40),
-                            height=800,
-                            xaxis=dict(showgrid=False, zeroline=False),
-                            yaxis=dict(showgrid=False, zeroline=False)
-                        ))
-        
-        st.plotly_chart(fig, use_container_width=True)
+def generate_wordcloud():
+    data = fetch_data("SELECT description FROM experience")
+    text = ' '.join(data['description'].tolist())
+    words = pd.Series(text.split()).value_counts().head(50)
     
-    skill_network()
+    fig, ax = plt.subplots(figsize=(10, 6))
+    words.plot(kind='barh', ax=ax, color='skyblue')
+    ax.set_title('Top 50 Words in Job Descriptions')
+    ax.set_xlabel('Frequency')
+    ax.set_ylabel('Words')
+    st.pyplot(fig)
 
-# Page des descriptions
-elif page == "Descriptions":
-    st.header('Nuage de Mots des Descriptions de Postes')
-    experiences = fetch_data("SELECT description FROM experience")
-    text = ' '.join(experiences['description'].tolist())
-    wordcloud = WordCloud(background_color='white').generate(text)
+def skill_network():
+    data = fetch_data("""
+        SELECT e.job_title, es.skill_name
+        FROM experience_skills es
+        JOIN experience e ON es.experience_id = e.id
+    """)
+    G = nx.Graph()
+    for _, row in data.iterrows():
+        G.add_edge(row['job_title'], row['skill_name'])
     
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis("off")
-    st.pyplot(plt)
+    pos = nx.spring_layout(G)
+    edge_x = []
+    edge_y = []
 
-    st.header('Heatmap des Compétences')
-    skills_data = fetch_data("SELECT skill_name, proficiency FROM skills")
-    skills_data = skills_data.pivot("skill_name", "proficiency", "proficiency")
-    st.heatmap(skills_data, cmap='coolwarm', annot=True)
-
-# Page de la carte
-elif page == "Carte":
-    st.header('Carte des Lieux où j\'ai Travaillé')
+    for edge in G.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        edge_x.extend([x0, x1, None])
+        edge_y.extend([y0, y1, None])
     
-    def fetch_locations():
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=0.5, color='#888'),
+        hoverinfo='none',
+        mode='lines'
+    )
+
+    node_x = []
+    node_y = []
+    text = []
+
+    for node in G.nodes():
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
+        text.append(node)
+    
+    node_trace = go.Scatter(
+        x=node_x, y=node_y,
+        text=text,
+        mode='markers+text',
+        hoverinfo='text',
+        marker=dict(
+            showscale=True,
+            colorscale='YlGnBu',
+            size=10,
+            colorbar=dict(
+                thickness=15,
+                title='Connexions de Nœuds',  # Mettre à jour le titre ici
+                xanchor='left',
+                titleside='right'
+            ),
+            line=dict(width=2))
+    )
+
+    fig = go.Figure(data=[edge_trace, node_trace],
+                    layout=go.Layout(
+                        title='Réseau de Compétences',
+                        showlegend=False,
+                        hovermode='closest',
+                        margin=dict(b=20,l=5,r=5,t=40),
+                        height=800,  # Augmenter la hauteur ici
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
+    st.plotly_chart(fig)
+
+
+def fetch_locations():
         data = {
             "Lieu": ["Voiron, France", "Denver, Colorado, USA", "Drôme, France", "Font-Romeu, France", "Divonne-les-Bains, France", "Lyon, France", "Tanzanie", "Afrique du Sud", "Mâcon, France", "Courchevel, France"],
             "Latitude": [45.367, 39.7392, 44.7631, 42.5037, 46.356, 45.764, -6.369, -30.5595, 46.306, 45.414],
@@ -202,7 +165,58 @@ elif page == "Carte":
         for _, row in data.iterrows():
             folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
         return m
+
+st.set_page_config(layout="wide")
+st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
+# Suppression de la barre de navigation
+st.markdown(
+    """
+    <style>
+    .css-18e3th9 { visibility: hidden; }
+    .css-1d391kg { visibility: hidden; }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Carte"])
+
+with tab1:
+    st.header('Frise Chronologique des Expériences et Formations')
+    interactive_timeline()
+    
+    st.header('Expériences')
+    experience_data = fetch_data("SELECT id, job_title AS 'Titre du poste', company AS 'Entreprise', start_date AS 'Date de début', end_date AS 'Date de fin' FROM experience")
+    experience_data['Compétences'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
+    st.write(experience_data)
+
+    st.header('Formations')
+    education_data = fetch_data("SELECT id, degree AS 'Diplôme', institution AS 'Institution', start_date AS 'Date de début', end_date AS 'Date de fin' FROM education")
+    education_data['Compétences'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
+    st.write(education_data)
+
+with tab2:
+    st.header('Distribution des Compétences')
+    skill_distribution()
+    st.header('Réseau de Compétences')
+    skill_network()
+
+with tab3:
+    st.header('Nuage de Mots des Descriptions de Poste')
+    generate_wordcloud()
+
+with tab4:
+    st.header('Carte des Lieux où j\'ai Travaillé')
     
     location_data = fetch_locations()
     map_ = create_map(location_data)
     st_folium(map_, width=700, height=500)
+
+
+
+
+
+
+
+
+

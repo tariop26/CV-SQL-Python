@@ -254,7 +254,7 @@ with tab1:
 
 with tab2:
     st.header('Distribution des Compétences')
-    col1, col2, col3 = st.columns([1, 0.1, 1])
+    col1, col2, col3 = st.columns([3,1,3])
     
     with col1:
         skill_distribution()

@@ -190,7 +190,7 @@ with tab1:
     with col1:
         interactive_timeline()
     with col2:
-        st.image("C:\Users\mapoi\OneDrive\Bureau\CV-SQL-Python\CV-SQL-Python\avatar-cv-manuel-poirat.jpg", use_column_width=True)  # Remplacez par le chemin de votre image
+        st.image("avatar-cv-manuel-poirat.jpg", use_column_width=True)  # Remplacez par le chemin de votre image
 
     st.header('Expériences')
     experience_data = fetch_data("SELECT id, job_title AS 'Titre du poste', company AS 'Entreprise', start_date AS 'Date de début', end_date AS 'Date de fin' FROM experience")

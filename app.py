@@ -102,6 +102,46 @@ def generate_wordcloud():
     ax.set_xlabel('Frequency')
     ax.set_ylabel('Words')
     st.pyplot(fig)
+    
+def radar_chart():
+    skills = ['SQL', 'Power BI', 'Wordpress', 'Python', 'Excel', 'Autonomie', 'Travail en équipe', 'Management', 'Organisation de voyages']
+    proficiency = [70, 75, 80, 65, 90, 95, 90, 90, 95]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatterpolar(
+        r=proficiency,
+        theta=skills,
+        fill='toself',
+        name='Proficiency',
+        fillcolor='rgba(0, 191, 255, 0.2)',
+        line=dict(color='rgba(0, 191, 255, 1)')
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100],
+                showticklabels=False,  # Masquer les étiquettes de graduation
+                showline=False,  # Masquer la ligne de l'axe radial
+                ticks=''  # Masquer les graduations sur l'axe radial
+            ),
+            angularaxis=dict(
+                linewidth=1,
+                showline=True,
+                showticklabels=True,
+                color='grey'
+            ),
+            bgcolor='rgba(0,0,0,0)'  # Rendre le fond du radar transparent
+        ),
+        plot_bgcolor='rgba(0,0,0,0)',  # Rendre le fond de la zone de traçage transparent
+        paper_bgcolor='rgba(0,0,0,0)',  # Rendre le fond du papier transparent
+        showlegend=False,
+        title="Compétences et leur Niveau de Maîtrise (%)"
+    )
+
+    st.plotly_chart(fig)
 
 def skill_network():
     data = fetch_data("""
@@ -220,32 +260,8 @@ with tab2:
         skill_distribution()
     
     with col3:
-        radar_fig = go.Figure()
-
-        radar_fig.update_layout(
-            polar=dict(
-                radialaxis=dict(
-                    visible=True,
-                    range=[0, 100],
-                    showticklabels=False,  # Masquer les étiquettes de graduation
-                    showline=False,  # Masquer la ligne de l'axe radial
-                    ticks=''  # Masquer les graduations sur l'axe radial
-                ),
-                angularaxis=dict(
-                    linewidth=1,
-                    showline=True,
-                    showticklabels=True,
-                    color='grey'
-                ),
-                bgcolor='rgba(0,0,0,0)'  # Rendre le fond du radar transparent
-            ),
-            plot_bgcolor='rgba(0,0,0,0)',  # Rendre le fond de la zone de traçage transparent
-            paper_bgcolor='rgba(0,0,0,0)',  # Rendre le fond du papier transparent
-            showlegend=False,
-            title="Compétences et leur Niveau de Maîtrise (%)"
-        )
-
-        st.plotly_chart(radar_fig)
+        st.header('Radar des Compétences')
+        radar_chart()
         
     st.header('Réseau de Compétences')
     skill_network()

@@ -66,16 +66,12 @@ def interactive_timeline():
         ))
 
     fig.update_layout(
-        title='',
+        title='Chronologie Interactive des Expériences et Formations',
         xaxis=dict(title='Date'),
         yaxis=dict(title='', showticklabels=False),
         showlegend=False,
         margin=dict(l=50, r=50, t=50, b=50),
-        height=400,
-        annotations=[
-            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Expérience'], xanchor='right', yanchor='middle', text='Expérience', showarrow=False, font=dict(size=12, color='green')),
-            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Formation'], xanchor='right', yanchor='middle', text='Formation', showarrow=False, font=dict(size=12, color='blue'))
-        ]
+        height=400
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -188,14 +184,8 @@ tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Ca
 
 with tab1:
     st.header('Frise Chronologique des Expériences et Formations')
-
-    # Utilisation de colonnes pour ajouter la photo en haut à droite
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        interactive_timeline()
-    with col2:
-        st.image("avatar-cv-manuel-poirat.jpg", use_column_width=True)  # Remplacez par le chemin de votre image
-
+    interactive_timeline()
+    
     st.header('Expériences')
     experience_data = fetch_data("SELECT id, job_title AS 'Titre du poste', company AS 'Entreprise', start_date AS 'Date de début', end_date AS 'Date de fin' FROM experience")
     experience_data['Compétences'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
@@ -211,10 +201,6 @@ with tab2:
     skill_distribution()
     st.header('Réseau de Compétences')
     skill_network()
-
-with tab3:
-    st.header('Nuage de Mots des Descriptions de Poste')
-    generate_wordcloud()
 
 with tab4:
     st.header('Carte des Lieux où j\'ai Travaillé')

@@ -1,13 +1,12 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
+import folium
+from streamlit_folium import folium_static
 import plotly.graph_objects as go
-import random
 import matplotlib.pyplot as plt
 import seaborn as sns
 import networkx as nx
-from streamlit_folium import st_folium
-import folium
 import altair as alt
 from auth import authenticate
 from matplotlib_venn import venn3
@@ -96,9 +95,9 @@ def radar_chart():
             radialaxis=dict(
                 visible=True,
                 range=[0, 100],
-                showticklabels=False,  # Masquer les étiquettes de graduation
-                showline=False,  # Masquer la ligne de l'axe radial
-                ticks=''  # Masquer les graduations sur l'axe radial
+                showticklabels=False,
+                showline=False,
+                ticks=''
             ),
             angularaxis=dict(
                 linewidth=1,
@@ -106,10 +105,10 @@ def radar_chart():
                 showticklabels=True,
                 color='grey'
             ),
-            bgcolor='rgba(0,0,0,0)'  # Rendre le fond du radar transparent
+            bgcolor='rgba(0,0,0,0)'
         ),
-        plot_bgcolor='rgba(0,0,0,0)',  # Rendre le fond de la zone de traçage transparent
-        paper_bgcolor='rgba(0,0,0,0)',  # Rendre le fond du papier transparent
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
         showlegend=False,
         title=""
     )
@@ -164,7 +163,7 @@ def skill_network():
             size=10,
             colorbar=dict(
                 thickness=15,
-                title='Les relations inter-compétences',  # Mettre à jour le titre ici
+                title='Les relations inter-compétences',
                 xanchor='left',
                 titleside='right'
             ),
@@ -177,7 +176,7 @@ def skill_network():
                         showlegend=False,
                         hovermode='closest',
                         margin=dict(b=20,l=5,r=5,t=40),
-                        height=800,  # Augmenter la hauteur ici
+                        height=800,
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
     st.plotly_chart(fig)
@@ -191,30 +190,13 @@ def skill_network():
             """
         )
 
-
-def skill_progression():
-    progression_data = fetch_data("""
-        SELECT skill_name, date, proficiency
-        FROM skill_progression
-        ORDER BY date
-    """)
-    fig = go.Figure()
-
-    for skill in progression_data['skill_name'].unique():
-        skill_data = progression_data[progression_data['skill_name'] == skill]
-        fig.add_trace(go.Scatter(
-            x=skill_data['date'],
-            y=skill_data['proficiency'],
-            mode='lines+markers',
-            name=skill
-        ))
-
-    fig.update_layout(
-        title='Progression des compétences',
-        xaxis=dict(title='Date'),
-        yaxis=dict(title='Proficiency'),
-        height=400
-    )
+def fetch_locations():
+    data = {
+        "Lieu": ["Voiron, France", "Denver, Colorado, USA", "Drôme, France", "Font-Romeu, France", "Divonne-les-Bains, France", "Lyon, France", "Tanzanie", "Afrique du Sud", "Mâcon, France", "Courchevel, France"],
+        "Latitude": [45.367, 39.7392, 44.7631, 42.5037, 46.356, 45.764, -6.369, -30.5595, 46.306, 45.414],
+        "Longitude": [5.5788, -104.9903, 5.424, 1.982, 6.139, 4.835, 34.8888, 22.9375, 4.830, 6.631]
+    }
+    return pd.DataFrame(data)
 
 def employment_duration_histogram(width=6, height=4):
     data = fetch_data("""
@@ -225,7 +207,7 @@ def employment_duration_histogram(width=6, height=4):
     data['end_date'] = pd.to_datetime(data['end_date'])
     data['duration'] = (data['end_date'] - data['start_date']).dt.days / 30  # Durée en mois
 
-        # Calcul des statistiques
+    # Calcul des statistiques
     median_duration = data['duration'].median()
     mean_duration = data['duration'].mean()
     min_duration = data['duration'].min()
@@ -251,14 +233,6 @@ def employment_duration_histogram(width=6, height=4):
             - Durée maximale : {max_duration:.2f} mois
             """
         )
-
-def fetch_locations():
-    data = {
-        "Lieu": ["Voiron, France", "Denver, Colorado, USA", "Drôme, France", "Font-Romeu, France", "Divonne-les-Bains, France", "Lyon, France", "Tanzanie", "Afrique du Sud", "Mâcon, France", "Courchevel, France"],
-        "Latitude": [45.367, 39.7392, 44.7631, 42.5037, 46.356, 45.764, -6.369, -30.5595, 46.306, 45.414],
-        "Longitude": [5.5788, -104.9903, 5.424, 1.982, 6.139, 4.835, 34.8888, 22.9375, 4.830, 6.631]
-    }
-    return pd.DataFrame(data)
 
 def create_map(data):
     m = folium.Map(location=[45.764, 4.8357], zoom_start=2.5)  # Centré sur la France par défaut
@@ -317,11 +291,11 @@ with tab2:
 
 with tab3:
     st.header('Carte des Lieux où j\'ai Travaillé')
-location_data = fetch_locations()
-map_ = create_map(location_data)
-folium_static(map_, width=1200, height=800)
-st.markdown(
-        """
-        Quelques mois en Afrique, quelques années aux Etats-Unis et une bonne partie en Rhône-Alpes !
-        """
-    )
+    location_data = fetch_locations()
+    map_ = create_map(location_data)
+    folium_static(map_, width=1200, height=800)
+    st.markdown(
+            """
+            Quelques mois en Afrique, quelques années aux Etats-Unis et une bonne partie en Rhône-Alpes !
+            """
+        )

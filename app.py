@@ -214,7 +214,7 @@ def skill_progression():
         height=400
     )
 
-def employment_duration_histogram():
+def employment_duration_histogram(width=600, height=400):
     data = fetch_data("""
         SELECT job_title, start_date, end_date
         FROM experience
@@ -223,12 +223,16 @@ def employment_duration_histogram():
     data['end_date'] = pd.to_datetime(data['end_date'])
     data['duration'] = (data['end_date'] - data['start_date']).dt.days / 30  # Durée en mois
 
-    fig, ax = plt.subplots(figsize=(0.5,0.3))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
+    fig, ax = plt.subplots(figsize=(width / 100, height / 100))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
     sns.histplot(data['duration'], bins=10, kde=False, ax=ax)
     ax.set_title("")
     ax.set_xlabel("Nbre de mois)")
     ax.set_ylabel("Nombre d'emplois")
-    st.pyplot(fig)
+
+    # Encapsuler le graphique dans un conteneur avec des dimensions spécifiées
+    placeholder = st.empty()
+    with placeholder.container():
+        st.pyplot(fig)
 
 def create_map(data):
     m = folium.Map(location=[45.764, 4.8357], zoom_start=2.5)  # Centré sur la France par défaut

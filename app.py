@@ -264,14 +264,10 @@ def create_map(data):
     for _, row in data.iterrows():
         folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
     return m
-    st.markdown(
-            """
-            Quelques mois en Afrique, quelques années aux Etats-Unis et une bonne partie en Rhône-Alpes !"""
-        )
 
 st.set_page_config(layout="wide")
 st.title('CV de Manuel Poirat')
-st.markdown("[Voir mon CV "classique"](https://tariop26.github.io/)")
+st.markdown("[Voir mon CV \"classique\"](https://tariop26.github.io/)")
 # Suppression de la barre de navigation
 st.markdown(
     """
@@ -323,3 +319,8 @@ with tab3:
     location_data = fetch_locations()
     map_ = create_map(location_data)
     st_folium(map_, width=1200, height=800)
+    st.markdown(
+            """
+            Quelques mois en Afrique, quelques années aux Etats-Unis et une bonne partie en Rhône-Alpes !
+            """
+        )

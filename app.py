@@ -73,10 +73,8 @@ def interactive_timeline():
         margin=dict(l=50, r=50, t=50, b=50),
         height=400,
         annotations=[
-            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Expérience'], xanchor='right', yanchor='middle',
-                 text='Expérience', showarrow=False, font=dict(size=12, color='green')),
-            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Formation'], xanchor='right', yanchor='middle',
-                 text='Formation', showarrow=False, font=dict(size=12, color='blue'))
+            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Expérience'], xanchor='right', yanchor='middle', text='Expérience', showarrow=False, font=dict(size=12, color='green')),
+            dict(xref='paper', yref='paper', x=0.01, y=y_positions['Formation'], xanchor='right', yanchor='middle', text='Formation', showarrow=False, font=dict(size=12, color='blue'))
         ]
     )
     st.plotly_chart(fig, use_container_width=True)

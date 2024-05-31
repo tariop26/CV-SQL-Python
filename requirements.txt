@@ -9,3 +9,4 @@ seaborn==0.12.1
 networkx==2.6.3
 folium==0.12.1
 streamlit-folium==0.8.0
+matplotlib-venn

@@ -37,8 +37,8 @@ def skill_distribution():
         GROUP BY es.skill_name
     """)
     fig = alt.Chart(data).mark_bar().encode(
-        x='count:Q',
-        y=alt.Y('skill_name:N', sort='-x')
+        x='',
+        y=alt.Y('', sort='-x')
     ).properties(
         title=''
     )

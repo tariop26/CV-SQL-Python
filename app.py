@@ -311,7 +311,7 @@ with tab2:
         skill_distribution()
     
     with col3:
-        st.subheader('Niveau de compétence par compétence')
+        st.subheader('Niveau de compétence par domaine')
         radar_chart()
         
     st.header('Réseau de Compétences')

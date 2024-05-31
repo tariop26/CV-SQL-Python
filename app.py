@@ -191,13 +191,6 @@ def skill_network():
             """
         )
 
-def fetch_locations():
-    data = {
-        "Lieu": ["Voiron, France", "Denver, Colorado, USA", "Drôme, France", "Font-Romeu, France", "Divonne-les-Bains, France", "Lyon, France", "Tanzanie", "Afrique du Sud", "Mâcon, France", "Courchevel, France"],
-        "Latitude": [45.367, 39.7392, 44.7631, 42.5037, 46.356, 45.764, -6.369, -30.5595, 46.306, 45.414],
-        "Longitude": [5.5788, -104.9903, 5.424, 1.982, 6.139, 4.835, 34.8888, 22.9375, 4.830, 6.631]
-    }
-    return pd.DataFrame(data)
 
 def skill_progression():
     progression_data = fetch_data("""
@@ -258,6 +251,14 @@ def employment_duration_histogram(width=6, height=4):
             - Durée maximale : {max_duration:.2f} mois
             """
         )
+
+def fetch_locations():
+    data = {
+        "Lieu": ["Voiron, France", "Denver, Colorado, USA", "Drôme, France", "Font-Romeu, France", "Divonne-les-Bains, France", "Lyon, France", "Tanzanie", "Afrique du Sud", "Mâcon, France", "Courchevel, France"],
+        "Latitude": [45.367, 39.7392, 44.7631, 42.5037, 46.356, 45.764, -6.369, -30.5595, 46.306, 45.414],
+        "Longitude": [5.5788, -104.9903, 5.424, 1.982, 6.139, 4.835, 34.8888, 22.9375, 4.830, 6.631]
+    }
+    return pd.DataFrame(data)
 
 def create_map(data):
     m = folium.Map(location=[45.764, 4.8357], zoom_start=2.5)  # Centré sur la France par défaut

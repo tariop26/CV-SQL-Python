@@ -307,11 +307,11 @@ with tab2:
     col1, col2, col3 = st.columns([1, 0.1, 1])
     
     with col1:
-        st.subheader('Répartition de mes compétences en année de pratique')
+        st.subheader('Répartition des compétences à travers les expériences')
         skill_distribution()
     
     with col3:
-        st.subheader('Radar des Compétences')
+        st.subheader('Niveau de compétence par compétence')
         radar_chart()
         
     st.header('Réseau de Compétences')

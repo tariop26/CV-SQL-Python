@@ -10,6 +10,8 @@ from streamlit_folium import st_folium
 import folium
 import altair as alt
 from auth import authenticate
+from matplotlib_venn import venn3
+from collections import defaultdict
 
 def fetch_skills_for_item(item_id, item_type):
     conn = sqlite3.connect('cv_database.db')
@@ -211,54 +213,43 @@ def skill_progression():
         yaxis=dict(title='Proficiency'),
         height=400
     )
-    st.plotly_chart(fig)
 
-def project_distribution():
-    project_data = fetch_data("""
-        SELECT project_type, COUNT(*) as count
-        FROM projects
-        GROUP BY project_type
-    """)
-    fig = alt.Chart(project_data).mark_bar().encode(
-        x='count:Q',
-        y=alt.Y('project_type:N', sort='-x')
-    ).properties(
-        title='Répartition des Projets par Type'
-    )
-    st.altair_chart(fig, use_container_width=True)
-
-def create_work_study_map():
-    location_data = fetch_data("""
-        SELECT location_name, latitude, longitude
-        FROM work_study_locations
-    """)
-    m = folium.Map(location=[45.764, 4.8357], zoom_start=6)
-    for _, row in location_data.iterrows():
-        folium.Marker(location=[row['latitude'], row['longitude']], popup=row['location_name']).add_to(m)
-    return m
-
-def top_skills_over_time():
+def skills_venn_diagram():
     data = fetch_data("""
-        SELECT es.skill_name, e.start_date
+        SELECT e.job_title, es.skill_name
         FROM experience_skills es
         JOIN experience e ON es.experience_id = e.id
-        UNION ALL
-        SELECT es.skill_name, ed.start_date
-        FROM education_skills es
-        JOIN education ed ON es.education_id = ed.id
+    """)
+
+    # Collecter les compétences par emploi
+    job_skills = defaultdict(set)
+    for _, row in data.iterrows():
+        job_skills[row['job_title']].add(row['skill_name'])
+
+    # Sélectionner trois emplois pour le diagramme de Venn
+    job_titles = list(job_skills.keys())[:3]
+    venn_data = [job_skills[job_titles[0]], job_skills[job_titles[1]], job_skills[job_titles[2]]]
+
+    fig, ax = plt.subplots()
+    venn = venn3([venn_data[0], venn_data[1], venn_data[2]], set_labels=(job_titles[0], job_titles[1], job_titles[2]))
+    ax.set_title('Diagramme de Venn des Compétences Partagées')
+    st.pyplot(fig)
+    
+def employment_duration_histogram():
+    data = fetch_data("""
+        SELECT job_title, start_date, end_date
+        FROM experience
     """)
     data['start_date'] = pd.to_datetime(data['start_date'])
-    skills_over_time = data.groupby(['start_date', 'skill_name']).size().reset_index(name='count')
-    fig = go.Figure()
+    data['end_date'] = pd.to_datetime(data['end_date'])
+    data['duration'] = (data['end_date'] - data['start_date']).dt.days / 30  # Durée en mois
 
-    for skill in skills_over_time['skill_name'].unique():
-        skill_data = skills_over_time[skills_over_time['skill_name'] == skill]
-        fig.add_trace(go.Scatter(
-            x=skill_data['start_date'],
-            y=skill_data['count'],
-            mode='lines+markers',
-            name=skill
-        ))
+    fig, ax = plt.subplots()
+    sns.histplot(data['duration'], bins=10, kde=False, ax=ax)
+    ax.set_title('Histogramme des Durées d\'Emploi')
+    ax.set_xlabel('Durée (mois)')
+    ax.set_ylabel('Nombre d\'emplois')
+    st.pyplot(fig)
 
     fig.update_layout(
         title='Top Skills Over Time',
@@ -287,7 +278,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-tab1, tab2, tab3, tab4 = st.tabs(["Mes expériences", "Mes compétences", "Top Skills Over Time", "Carte"])
+tab1, tab2, tab3 = st.tabs(["Mes expériences", "Mes compétences", "Itinéraire d'un baroudeur"])
 
 with tab1:
     st.header('Mes expériences et formations au fil du temps')
@@ -302,6 +293,9 @@ with tab1:
     education_data = fetch_data("SELECT id, degree AS 'Diplôme', institution AS 'Institution', start_date AS 'Date de début', end_date AS 'Date de fin' FROM education")
     education_data['Compétences'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
     st.write(education_data, use_container_width=True)
+    
+    st.header('Histogramme des Durées d\'Emploi')
+    employment_duration_histogram()
 
 with tab2:
     st.header('Un professionnel aux multiples talents')
@@ -317,12 +311,11 @@ with tab2:
         
     st.header('Réseau de Compétences')
     skill_network()
+    
+    st.header('Diagramme de Venn des Compétences Partagées')
+    skills_venn_diagram()
 
 with tab3:
-    st.header('Répartition des Projets par Type')
-    project_distribution()
-
-with tab4:
     st.header('Carte des Lieux où j\'ai Travaillé')
     location_data = fetch_locations()
     map_ = create_map(location_data)

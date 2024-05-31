@@ -52,12 +52,12 @@ def interactive_timeline():
     fig = go.Figure()
     colors = {'Expérience': 'green', 'Formation': 'blue'}
 
-    y_positions = {'Expérience': 0.5, 'Formation': 0.55}  # Adjust the y-positions here
+    y_positions = {'Expérience': 0.5, 'Formation': 0.55}  # Ajuster les positions y ici
 
     for _, row in timeline_data.iterrows():
         fig.add_trace(go.Scatter(
             x=[row['start_date'], row['end_date']],
-            y=[row['type'], row['type']],
+            y=[y_positions[row['type']], y_positions[row['type']]],
             mode='lines+markers',
             line=dict(color=colors[row['type']], width=2),
             marker=dict(size=10),
@@ -68,13 +68,12 @@ def interactive_timeline():
     fig.update_layout(
         title='Chronologie Interactive des Expériences et Formations',
         xaxis=dict(title='Date'),
-        yaxis=dict(title=''),
+        yaxis=dict(title='', showticklabels=False),
         showlegend=False,
         margin=dict(l=50, r=50, t=50, b=50),
         height=400
     )
-    st.plotly_chart(fig)
-
+    st.plotly_chart(fig, use_container_width=True)
 
 def generate_wordcloud():
     data = fetch_data("SELECT description FROM experience")
@@ -145,10 +144,10 @@ def skill_network():
 
     fig = go.Figure(data=[edge_trace, node_trace],
                     layout=go.Layout(
-                        title='',
+                        title='Réseau de Compétences',
                         showlegend=False,
                         hovermode='closest',
-                        margin=dict(b=20, l=5, r=5, t=40),
+                        margin=dict(b=20,l=5,r=5,t=40),
                         height=800,  # Augmenter la hauteur ici
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
@@ -184,18 +183,18 @@ st.markdown(
 tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Carte"])
 
 with tab1:
-    st.header('Frise Chronologique des Expériences et Formations')
+    st.header('Représentation dans le temps de mes formations et expériences professionnelles')
     interactive_timeline()
     
     st.header('Expériences')
     experience_data = fetch_data("SELECT id, job_title AS 'Titre du poste', company AS 'Entreprise', start_date AS 'Date de début', end_date AS 'Date de fin' FROM experience")
     experience_data['Compétences'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
-    st.write(experience_data)
+    st.write(experience_data, use_container_width=True)
 
     st.header('Formations')
     education_data = fetch_data("SELECT id, degree AS 'Diplôme', institution AS 'Institution', start_date AS 'Date de début', end_date AS 'Date de fin' FROM education")
     education_data['Compétences'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
-    st.write(education_data)
+    st.write(education_data, use_container_width=True)
 
 with tab2:
     st.header('Distribution des Compétences')

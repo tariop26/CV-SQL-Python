@@ -157,6 +157,24 @@ formations = [
         "description": "Master 1 Sport & Tourisme.",
         "field_of_study": "Sport & Tourisme",
         "skills": ["Travail en équipe","Organisation de voyages"]
+    },
+    {
+        "institution": "UFR Staps - Besançon",
+        "degree": "Licence 1 Sport",
+        "start_date": "2002-09-01",
+        "end_date": "2003-06-30",
+        "description": "1ère année de fac de sport, option handball",
+        "field_of_study": "Sport",
+        "skills": ["Autonomie"]
+    },
+    {
+        "institution": "Lycée Condorcet - Belfort",
+        "degree": "Baccalauréat scientifique",
+        "start_date": "2000-09-01",
+        "end_date": "2002-06-30",
+        "description": "Lycée général. Option maths en terminal.",
+        "field_of_study": "Sciences, Maths",
+        "skills": ["Autonomie"]
     }
 ]
 

@@ -67,7 +67,9 @@ def interactive_timeline():
         title='Chronologie Interactive des Expériences et Formations',
         xaxis=dict(title='Date'),
         yaxis=dict(title=''),
-        showlegend=False
+        showlegend=False,
+        margin=dict(l=50, r=50, t=50, b=50),
+        height=400
     )
     st.plotly_chart(fig)
 
@@ -187,14 +189,15 @@ tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Ca
 with tab1:
     st.header('Frise Chronologique des Expériences et Formations')
     interactive_timeline()
+    
     st.header('Expériences')
-    experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")
-    experience_data['skills'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
+    experience_data = fetch_data("SELECT id, job_title AS 'Titre du poste', company AS 'Entreprise', start_date AS 'Date de début', end_date AS 'Date de fin' FROM experience")
+    experience_data['Compétences'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
     st.write(experience_data)
 
     st.header('Formations')
-    education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date FROM education")
-    education_data['skills'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
+    education_data = fetch_data("SELECT id, degree AS 'Diplôme', institution AS 'Institution', start_date AS 'Date de début', end_date AS 'Date de fin' FROM education")
+    education_data['Compétences'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
     st.write(education_data)
 
 with tab2:

@@ -214,7 +214,7 @@ def skill_progression():
         height=400
     )
 
-def employment_duration_histogram(width=600, height=400):
+def employment_duration_histogram(width=6, height=4):
     data = fetch_data("""
         SELECT job_title, start_date, end_date
         FROM experience
@@ -270,7 +270,7 @@ with tab1:
     st.write(education_data, use_container_width=True)
     
     st.header('Histogramme des Durées d\'Emploi')
-    employment_duration_histogram()
+    employment_duration_histogram(width=600, height=400)
 
 with tab2:
     st.header('Un professionnel aux multiples talents')

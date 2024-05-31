@@ -244,18 +244,22 @@ with tab1:
     st.write(education_data, use_container_width=True)
 
 with tab2:
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns([3, 1, 3])  # Ajuster les largeurs des colonnes ici
 
     with col1:
         st.header('Distribution des Compétences')
         skill_distribution()
     
     with col2:
+        st.write("")  # Colonne intermédiaire vide et étroite
+        
+    with col3:
         st.header('Radar des Compétences')
         radar_chart()
 
     st.header('Réseau de Compétences')
     skill_network()
+
 
 with tab3:
     st.header('Nuage de Mots des Descriptions de Poste')

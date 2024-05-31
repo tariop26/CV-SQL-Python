@@ -66,7 +66,7 @@ def interactive_timeline():
         ))
 
     fig.update_layout(
-        title='Chronologie Interactive des Expériences et Formations',
+        title='',
         xaxis=dict(title='Date'),
         yaxis=dict(title='', showticklabels=False),
         showlegend=False,
@@ -183,9 +183,15 @@ st.markdown(
 tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Carte"])
 
 with tab1:
-    st.header('Représentation dans le temps de mes formations et expériences professionnelles')
-    interactive_timeline()
-    
+    st.header('Frise Chronologique des Expériences et Formations')
+
+    # Utilisation de colonnes pour ajouter la photo en haut à droite
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        interactive_timeline()
+    with col2:
+        st.image("C:\Users\mapoi\OneDrive\Bureau\CV-SQL-Python\CV-SQL-Python\avatar-cv-manuel-poirat.jpg", use_column_width=True)  # Remplacez par le chemin de votre image
+
     st.header('Expériences')
     experience_data = fetch_data("SELECT id, job_title AS 'Titre du poste', company AS 'Entreprise', start_date AS 'Date de début', end_date AS 'Date de fin' FROM experience")
     experience_data['Compétences'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))

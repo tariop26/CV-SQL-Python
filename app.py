@@ -7,7 +7,6 @@ from auth import authenticate
 import random
 import matplotlib.pyplot as plt
 import seaborn as sns
-from wordcloud import WordCloud
 import networkx as nx
 import folium
 from streamlit_folium import st_folium

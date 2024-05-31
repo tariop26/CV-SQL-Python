@@ -230,39 +230,8 @@ def employment_duration_histogram():
     ax.set_ylabel("Nombre d'emplois")
     st.pyplot(fig)
 
-def skills_venn_diagram():
-    data = fetch_data("""
-        SELECT e.job_title, es.skill_name
-        FROM experience_skills es
-        JOIN experience e ON es.experience_id = e.id
-    """)
-
-    # Collecter les compétences par emploi
-    job_skills = defaultdict(set)
-    for _, row in data.iterrows():
-        job_skills[row['job_title']].add(row['skill_name'])
-
-    # Sélectionner trois emplois pour le diagramme de Venn
-    job_titles = list(job_skills.keys())[:3]
-    venn_data = [job_skills[job_titles[0]], job_skills[job_titles[1]], job_skills[job_titles[2]]]
-
-    fig, ax = plt.subplots(figsize=(6, 4))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
-    venn = venn3([venn_data[0], venn_data[1], venn_data[2]], set_labels=(job_titles[0], job_titles[1], job_titles[2]))
-    ax.set_title('Diagramme de Venn des Compétences Partagées')
-
-    # Ajouter une légende claire
-    legend_text = f"""
-    {job_titles[0]}: {', '.join(job_skills[job_titles[0]])}
-    {job_titles[1]}: {', '.join(job_skills[job_titles[1]])}
-    {job_titles[2]}: {', '.join(job_skills[job_titles[2]])}
-    """
-    ax.text(-0.75, -0.75, legend_text, fontsize=10, ha='left', va='top', transform=ax.transAxes)
-
-    st.pyplot(fig)
-
-
 def create_map(data):
-    m = folium.Map(location=[20, 0], zoom_start=2)
+    m = folium.Map(location=[45.764, 4.8357], zoom_start=6)  # Centré sur la France par défaut
     for _, row in data.iterrows():
         folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
     return m
@@ -313,12 +282,9 @@ with tab2:
         
     st.header('Réseau de Compétences')
     skill_network()
-    
-    st.header('Diagramme de Venn des Compétences Partagées')
-    skills_venn_diagram()
 
 with tab3:
     st.header('Carte des Lieux où j\'ai Travaillé')
     location_data = fetch_locations()
     map_ = create_map(location_data)
-    st_folium(map_, width=700, height=500)
+    st_folium(map_, width=1200, height=800)

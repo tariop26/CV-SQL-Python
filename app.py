@@ -42,22 +42,36 @@ def skill_distribution():
     )
     st.altair_chart(fig, use_container_width=True)
 
-def skill_heatmap():
+def top_skills_over_time():
     data = fetch_data("""
-        SELECT es.skill_name, e.job_title, COUNT(*) as count
+        SELECT es.skill_name, e.start_date
         FROM experience_skills es
         JOIN experience e ON es.experience_id = e.id
-        GROUP BY es.skill_name, e.job_title
+        UNION ALL
+        SELECT es.skill_name, ed.start_date
+        FROM education_skills es
+        JOIN education ed ON es.education_id = ed.id
     """)
-    st.write(data)  # Debugging statement to inspect data
-    if 'skill_name' in data.columns and 'job_title' in data.columns and 'count' in data.columns:
-        heatmap_data = data.pivot(index="skill_name", columns="job_title", values="count").fillna(0)
-        fig, ax = plt.subplots(figsize=(10, 8))
-        sns.heatmap(heatmap_data, cmap="YlGnBu", ax=ax)
-        ax.set_title('Heatmap des Compétences par Poste')
-        st.pyplot(fig)
-    else:
-        st.error("Data format is incorrect. Please check the column names and ensure they match the expected format.")
+    data['start_date'] = pd.to_datetime(data['start_date'])
+    skills_over_time = data.groupby(['start_date', 'skill_name']).size().reset_index(name='count')
+    fig = go.Figure()
+
+    for skill in skills_over_time['skill_name'].unique():
+        skill_data = skills_over_time[skills_over_time['skill_name'] == skill]
+        fig.add_trace(go.Scatter(
+            x=skill_data['start_date'],
+            y=skill_data['count'],
+            mode='lines+markers',
+            name=skill
+        ))
+
+    fig.update_layout(
+        title='Top Skills Over Time',
+        xaxis=dict(title='Date'),
+        yaxis=dict(title='Count'),
+        showlegend=True
+    )
+    st.plotly_chart(fig)
 
 def interactive_timeline():
     timeline_data = fetch_data("""
@@ -102,46 +116,6 @@ def generate_wordcloud():
     ax.set_xlabel('Frequency')
     ax.set_ylabel('Words')
     st.pyplot(fig)
-    
-def radar_chart():
-    skills = ['SQL', 'Power BI', 'Wordpress', 'Python', 'Excel', 'Autonomie', 'Travail en équipe', 'Management', 'Organisation de voyages']
-    proficiency = [70, 75, 80, 65, 90, 95, 90, 90, 95]
-
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatterpolar(
-        r=proficiency,
-        theta=skills,
-        fill='toself',
-        name='Proficiency',
-        fillcolor='rgba(0, 191, 255, 0.2)',
-        line=dict(color='rgba(0, 191, 255, 1)')
-    ))
-
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100],
-                showticklabels=False,  # Masquer les étiquettes de graduation
-                showline=False,  # Masquer la ligne de l'axe radial
-                ticks=''  # Masquer les graduations sur l'axe radial
-            ),
-            angularaxis=dict(
-                linewidth=1,
-                showline=True,
-                showticklabels=True,
-                color='grey'
-            ),
-            bgcolor='rgba(0,0,0,0)'  # Rendre le fond du radar transparent
-        ),
-        plot_bgcolor='rgba(0,0,0,0)',  # Rendre le fond de la zone de traçage transparent
-        paper_bgcolor='rgba(0,0,0,0)',  # Rendre le fond du papier transparent
-        showlegend=False,
-        title="Compétences et leur Niveau de Maîtrise (%)"
-    )
-
-    st.plotly_chart(fig)
 
 def skill_network():
     data = fetch_data("""
@@ -236,7 +210,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Carte"])
+tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Top Skills Over Time", "Carte"])
 
 with tab1:
     st.header('Frise Chronologique des Expériences et Formations')
@@ -248,30 +222,4 @@ with tab1:
     st.write(experience_data, use_container_width=True)
 
     st.header('Formations')
-    education_data = fetch_data("SELECT id, degree AS 'Diplôme', institution AS 'Institution', start_date AS 'Date de début', end_date AS 'Date de fin' FROM education")
-    education_data['Compétences'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
-    st.write(education_data, use_container_width=True)
-
-with tab2:
-    st.header('Distribution des Compétences')
-    col1, col2, col3 = st.columns([3,1,3])
-    
-    with col1:
-        skill_distribution()
-    
-    with col3:
-        st.header('Radar des Compétences')
-        radar_chart()
-        
-    st.header('Réseau de Compétences')
-    skill_network()
-
-with tab3:
-    st.header('Analyse de Compétences')
-    skill_heatmap()
-
-with tab4:
-    st.header('Carte des Lieux où j\'ai Travaillé')
-    location_data = fetch_locations()
-    map_ = create_map(location_data)
-    st_folium(map_, width=700, height=500)
+    education_data = fetch_data("SELECT id, degree AS 'Diplôme', institution AS 'Institution', start_date AS 'Date de début', end_date AS 'Date de fin

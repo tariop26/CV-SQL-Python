@@ -241,7 +241,7 @@ def employment_duration_histogram(width=6, height=4):
     fig, ax = plt.subplots(figsize=(width / 100, height / 100))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
     sns.histplot(data['duration'], bins=10, kde=False, ax=ax)
     ax.set_title("")
-    ax.set_xlabel("Nbre de mois)")
+    ax.set_xlabel("Nbre de mois")
     ax.set_ylabel("Nombre d'emplois")
 
     # Encapsuler le graphique dans un conteneur avec des dimensions spécifiées
@@ -271,6 +271,7 @@ def create_map(data):
 
 st.set_page_config(layout="wide")
 st.title('CV de Manuel Poirat')
+st.markdown("[Télécharger mon CV au format PDF](https://tariop26.github.io/)")
 # Suppression de la barre de navigation
 st.markdown(
     """

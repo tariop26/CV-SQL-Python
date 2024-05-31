@@ -5,6 +5,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 from auth import authenticate
 import random
+import matplotlib.pyplot as plt
+import seaborn as sns
+from wordcloud import WordCloud
+import networkx as nx
+import folium
+from streamlit_folium import st_folium
 
 # Configurer Streamlit pour utiliser toute la largeur de l'écran
 st.set_page_config(layout="wide")
@@ -174,6 +180,123 @@ def upsert_skill(skill_name, proficiency):
     conn.commit()
     conn.close()
 
+# Fonction pour la distribution des compétences
+def skill_distribution():
+    data = fetch_data("""
+        SELECT e.job_title, es.skill_name
+        FROM experience_skills es
+        JOIN experience e ON es.experience_id = e.id
+    """)
+    plt.figure(figsize=(10, 6))
+    sns.countplot(y='skill_name', hue='job_title', data=data, palette='viridis')
+    plt.title('Distribution des Compétences par Type d\'Expérience')
+    st.pyplot(plt)
+
+# Fonction pour créer une chronologie interactive
+def interactive_timeline():
+    timeline_data = fetch_data("""
+        SELECT job_title AS label, start_date, end_date, 'Expérience' AS type FROM experience
+        UNION ALL
+        SELECT degree AS label, start_date, end_date, 'Formation' AS type FROM education
+    """)
+    timeline_data['start_date'] = pd.to_datetime(timeline_data['start_date'])
+    timeline_data['end_date'] = pd.to_datetime(timeline_data['end_date'])
+    fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="type", color="type", text="label",
+                      title="Chronologie Interactive des Expériences et Formations")
+    fig.update_yaxes(categoryorder="category ascending")
+    st.plotly_chart(fig)
+
+# Fonction pour créer un nuage de mots
+def generate_wordcloud():
+    data = fetch_data("SELECT description FROM experience")
+    text = ' '.join(data['description'].tolist())
+    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.title('Nuage de Mots des Descriptions de Postes')
+    st.pyplot(plt)
+
+# Fonction pour créer un réseau de compétences
+def skill_network():
+    data = fetch_data("""
+        SELECT e.job_title, es.skill_name
+        FROM experience_skills es
+        JOIN experience e ON es.experience_id = e.id
+    """)
+    G = nx.Graph()
+    for _, row in data.iterrows():
+        G.add_edge(row['job_title'], row['skill_name'])
+    
+    pos = nx.spring_layout(G)
+    edge_trace = go.Scatter(
+        x=[], y=[],
+        line=dict(width=0.5, color='#888'),
+        hoverinfo='none',
+        mode='lines')
+    
+    for edge in G.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        edge_trace['x'] += [x0, x1, None]
+        edge_trace['y'] += [y0, y1, None]
+    
+    node_trace = go.Scatter(
+        x=[], y=[],
+        text=[],
+        mode='markers+text',
+        hoverinfo='text',
+        marker=dict(
+            showscale=True,
+            colorscale='YlGnBu',
+            size=10,
+            colorbar=dict(
+                thickness=15,
+                title='Node Connections',
+                xanchor='left',
+                titleside='right'
+            ),
+            line=dict(width=2)))
+    
+    for node in G.nodes():
+        x, y = pos[node]
+        node_trace['x'] += [x]
+        node_trace['y'] += [y]
+        node_trace['text'] += [node]
+    
+    fig = go.Figure(data=[edge_trace, node_trace],
+                    layout=go.Layout(
+                        title='Réseau de Compétences',
+                        showlegend=False,
+                        hovermode='closest',
+                        margin=dict(b=20,l=5,r=5,t=40),
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
+    st.plotly_chart(fig)
+
+# Fonction pour créer une carte des lieux
+def location_map():
+    data = fetch_data("SELECT company, job_title, description FROM experience")
+    # Remplacer par les coordonnées réelles des lieux où vous avez travaillé
+    locations = {
+        'COMMUNAUTÉ AGGLOMÉRATION PAYS VOIRONNAIS - SERVICE TOURISME': [45.3674, 5.5939],
+        'DÉVELOPPEUR WORDPRESS INDÉPENDANT': [39.7392, -104.9903],  # Exemple de localisation à Denver
+        'ROC FRANCE (AREAS)': [44.8998, 5.7191],  # Drôme
+        'HUTTOPIA': [42.5078, 2.0684],  # Font-Romeu
+        'ÉVÉNEMENTS ET VOYAGES': [45.7640, 4.8357],  # Lyon
+        'Petit Futé': [-6.369028, 34.888822],  # Tanzanie
+        'American Village': [46.3064, 4.8286],  # Mâcon
+        'Magic in Motion': [45.4153, 6.6314]  # Courchevel
+    }
+    
+    m = folium.Map(location=[46.603354, 1.888334], zoom_start=6)
+    for idx, row in data.iterrows():
+        if row['company'] in locations:
+            folium.Marker(locations[row['company']], popup=row['description']).add_to(m)
+    
+    st.header('Carte des Lieux où J\'ai Travaillé')
+    st_folium(m, width=700, height=450)
+
 # Interface de connexion
 st.title('CV de Manuel Poirat - Visualisations et Requêtes SQL')
 st.sidebar.title('Authentification')
@@ -263,103 +386,32 @@ if role:
         if st.button('Ajouter Compétence'):
             add_skill(new_skill_name, new_proficiency)
 
-    # Frise chronologique pour les utilisateurs
+    # Tableau de bord interactif pour les utilisateurs
     if role == "user":
         st.markdown("[Télécharger mon CV au format PDF](https://tariop26.github.io/)")
-        st.header('Frise Chronologique des Expériences et Formations')
-
-        # Récupérer les expériences
-        experiences = fetch_data("SELECT job_title, company, start_date, end_date FROM experience")
-        experiences['Type'] = 'Expérience'
-
-        # Récupérer les formations
-        educations = fetch_data("SELECT degree AS job_title, institution AS company, start_date, end_date FROM education")
-        educations['Type'] = 'Formation'
-
-        # Combiner les deux DataFrames
-        timeline_data = pd.concat([experiences, educations], ignore_index=True)
-        timeline_data['start_date'] = pd.to_datetime(timeline_data['start_date'])
-        timeline_data['end_date'] = pd.to_datetime(timeline_data['end_date'])
-        timeline_data['label'] = timeline_data.apply(lambda row: f"{row['job_title']} at {row['company']}", axis=1)
-
-        # Créer le diagramme de Gantt avec Plotly
-        fig = px.timeline(timeline_data, x_start="start_date", x_end="end_date", y="Type", color="Type", hover_name="label",
-                          title="Frise Chronologique des Expériences et Formations")
-
-        fig.update_yaxes(categoryorder="category ascending", showticklabels=False)
-        fig.update_traces(textposition='outside', insidetextanchor='start', marker=dict(line=dict(width=0.5, color='Black')))
-        fig.update_layout(showlegend=True)
-
-        # Configuration de la légende pour une meilleure lisibilité
-        fig.update_layout(
-            legend=dict(
-                title="Type d'activité",
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            )
-        )
-
-        # Configuration des labels de survol pour une meilleure lisibilité
-        fig.update_traces(
-            hovertemplate="<b>%{hovertext}</b><extra></extra>",
-            textfont_size=10,  # Ajuster la taille de la police des labels
-            insidetextanchor='middle'
-        )
-
-        st.plotly_chart(fig)
-
-        st.header('Expériences')
-        experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")
-        experience_data['skills'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
-        st.write(experience_data)
-
-        st.header('Formations')
-        education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date FROM education")
-        education_data['skills'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
-        st.write(education_data)
-
-        st.header('Compétences')
-        skills_data = fetch_data("SELECT * FROM skills")
-
-        # Créer un graphique en radar pour les compétences
-        categories = skills_data['skill_name'].tolist()
-        values = skills_data['proficiency'].tolist()
-
-        radar_fig = go.Figure()
-
-        radar_fig.add_trace(go.Scatterpolar(
-            r=values,
-            theta=categories,
-            fill='toself'
-        ))
-
-        radar_fig.update_layout(
-            polar=dict(
-                radialaxis=dict(
-                    visible=True,
-                    range=[0, 100],
-                    showticklabels=False,  # Masquer les étiquettes de graduation
-                    showline=False,  # Masquer la ligne de l'axe radial
-                    ticks=''  # Masquer les graduations sur l'axe radial
-                ),
-                angularaxis=dict(
-                    linewidth=1,
-                    showline=True,
-                    showticklabels=True,
-                    color='grey'
-                ),
-                bgcolor='rgba(0,0,0,0)'  # Rendre le fond du radar transparent
-            ),
-            plot_bgcolor='rgba(0,0,0,0)',  # Rendre le fond de la zone de traçage transparent
-            paper_bgcolor='rgba(0,0,0,0)',  # Rendre le fond du papier transparent
-            showlegend=False,
-            title="Compétences et leur Niveau de Maîtrise (%)"
-        )
-
-        st.plotly_chart(radar_fig)
+        
+        # Ajouter des onglets de navigation
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(['Distribution des Compétences', 'Chronologie Interactive', 'Nuage de Mots', 'Réseau de Compétences', 'Carte des Lieux'])
+        
+        with tab1:
+            st.header('Distribution des Compétences')
+            skill_distribution()
+        
+        with tab2:
+            st.header('Chronologie Interactive')
+            interactive_timeline()
+        
+        with tab3:
+            st.header('Nuage de Mots des Descriptions de Postes')
+            generate_wordcloud()
+        
+        with tab4:
+            st.header('Réseau de Compétences')
+            skill_network()
+        
+        with tab5:
+            st.header('Carte des Lieux où J\'ai Travaillé')
+            location_map()
 
 else:
     st.error("Nom d'utilisateur ou mot de passe incorrect")

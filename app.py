@@ -94,21 +94,35 @@ def skill_network():
         G.add_edge(row['job_title'], row['skill_name'])
     
     pos = nx.spring_layout(G)
-    edge_trace = go.Scatter(
-        x=[], y=[],
-        line=dict(width=0.5, color='#888'),
-        hoverinfo='none',
-        mode='lines')
+    edge_x = []
+    edge_y = []
 
     for edge in G.edges():
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
-        edge_trace['x'] += (x0, x1, None)
-        edge_trace['y'] += (y0, y1, None)
+        edge_x.extend([x0, x1, None])
+        edge_y.extend([y0, y1, None])
+    
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=0.5, color='#888'),
+        hoverinfo='none',
+        mode='lines'
+    )
+
+    node_x = []
+    node_y = []
+    text = []
+
+    for node in G.nodes():
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
+        text.append(node)
     
     node_trace = go.Scatter(
-        x=[], y=[],
-        text=[],
+        x=node_x, y=node_y,
+        text=text,
         mode='markers+text',
         hoverinfo='text',
         marker=dict(
@@ -121,14 +135,9 @@ def skill_network():
                 xanchor='left',
                 titleside='right'
             ),
-            line=dict(width=2)))
+            line=dict(width=2))
+    )
 
-    for node in G.nodes():
-        x, y = pos[node]
-        node_trace['x'].append(x)
-        node_trace['y'].append(y)
-        node_trace['text'].append(node)
-    
     fig = go.Figure(data=[edge_trace, node_trace],
                     layout=go.Layout(
                         title='Réseau de Compétences',
@@ -138,6 +147,7 @@ def skill_network():
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
     st.plotly_chart(fig)
+
 
 def location_map():
     data = fetch_data("SELECT company, job_title, description FROM experience")

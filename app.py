@@ -223,6 +223,12 @@ def employment_duration_histogram(width=6, height=4):
     data['end_date'] = pd.to_datetime(data['end_date'])
     data['duration'] = (data['end_date'] - data['start_date']).dt.days / 30  # Durée en mois
 
+        # Calcul des statistiques
+    median_duration = data['duration'].median()
+    mean_duration = data['duration'].mean()
+    min_duration = data['duration'].min()
+    max_duration = data['duration'].max()
+    
     fig, ax = plt.subplots(figsize=(width / 100, height / 100))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
     sns.histplot(data['duration'], bins=10, kde=False, ax=ax)
     ax.set_title("")
@@ -233,6 +239,16 @@ def employment_duration_histogram(width=6, height=4):
     placeholder = st.empty()
     with placeholder.container():
         st.pyplot(fig)
+        st.markdown("Cet histogramme montre la durée de chaque emploi en mois. On y constate que je suis resté majoritairement entre 20 et 40 mois pour chaque emploi.")
+        st.markdown(
+            f"""
+            **Statistiques des Durées d'Emploi :**
+            - Durée médiane : {median_duration:.2f} mois
+            - Durée moyenne : {mean_duration:.2f} mois
+            - Durée minimale : {min_duration:.2f} mois
+            - Durée maximale : {max_duration:.2f} mois
+            """
+        )
 
 def create_map(data):
     m = folium.Map(location=[45.764, 4.8357], zoom_start=2.5)  # Centré sur la France par défaut
@@ -259,18 +275,19 @@ with tab1:
     st.header('Mes expériences et formations au fil du temps')
     interactive_timeline()
     
-    st.header('Expériences')
-    experience_data = fetch_data("SELECT id, job_title AS 'Titre du poste', company AS 'Entreprise', start_date AS 'Date de début', end_date AS 'Date de fin' FROM experience")
-    experience_data['Compétences'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
-    st.write(experience_data, use_container_width=True)
-
-    st.header('Formations')
+    st.header("L'école, c'est bien...")
     education_data = fetch_data("SELECT id, degree AS 'Diplôme', institution AS 'Institution', start_date AS 'Date de début', end_date AS 'Date de fin' FROM education")
     education_data['Compétences'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
     st.write(education_data, use_container_width=True)
     
-    st.header('Histogramme des Durées d\'Emploi')
+    st.header("Le travail, c'est mieux !")
+    experience_data = fetch_data("SELECT id, job_title AS 'Titre du poste', company AS 'Entreprise', start_date AS 'Date de début', end_date AS 'Date de fin' FROM experience")
+    experience_data['Compétences'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
+    st.write(experience_data, use_container_width=True)
+
+    st.header('Combien de temps suis-je resté à chaque poste ?')
     employment_duration_histogram(width=600, height=400)
+    
 
 with tab2:
     st.header('Un professionnel aux multiples talents')

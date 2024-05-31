@@ -64,7 +64,7 @@ def interactive_timeline():
         ))
 
     fig.update_layout(
-        title='Chronologie Interactive des Expériences et Formations',
+        title='',
         xaxis=dict(title='Date'),
         yaxis=dict(title=''),
         showlegend=False,
@@ -209,4 +209,4 @@ with tab4:
     
     location_data = fetch_locations()
     map_ = create_map(location_data)
-    st_folium(map_, width=700, height=500)
+    st_folium(map_, width=1200, height=800)

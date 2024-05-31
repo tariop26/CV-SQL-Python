@@ -205,11 +205,7 @@ def radar_chart():
     st.plotly_chart(fig)
 
 st.set_page_config(layout="wide")
-col1, col2 = st.columns([4, 1])
-with col1:
-    st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
-with col2:
-    st.image("path/to/your/photo.jpg", use_column_width=True, height=200)  # Remplacez par le chemin de votre image
+st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
 
 # Suppression de la barre de navigation
 st.markdown(
@@ -226,8 +222,6 @@ tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Ca
 
 with tab1:
     st.header('Frise Chronologique des Expériences et Formations')
-
-    # Utilisation de colonnes pour ajouter la photo
     interactive_timeline()
     
     st.header('Expériences')
@@ -237,3 +231,24 @@ with tab1:
 
     st.header('Formations')
     education_data = fetch_data("SELECT id, degree AS 'Diplôme', institution AS 'Institution', start_date AS 'Date de début', end_date AS 'Date de fin' FROM education")
+    education_data['Compétences'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
+    st.write(education_data, use_container_width=True)
+
+with tab2:
+    st.header('Distribution des Compétences')
+    skill_distribution()
+    st.header('Réseau de Compétences')
+    skill_network()
+    st.header('Radar des Compétences')
+    radar_chart()
+
+with tab3:
+    st.header('Nuage de Mots des Descriptions de Poste')
+    generate_wordcloud()
+
+with tab4:
+    st.header('Carte des Lieux où j\'ai Travaillé')
+    
+    location_data = fetch_locations()
+    map_ = create_map(location_data)
+    st_folium(map_, width=700, height=500)

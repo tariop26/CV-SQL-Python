@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import random
 import matplotlib.pyplot as plt
+import seaborn as sns
 import networkx as nx
 from streamlit_folium import st_folium
 import folium
@@ -48,11 +49,15 @@ def skill_heatmap():
         JOIN experience e ON es.experience_id = e.id
         GROUP BY es.skill_name, e.job_title
     """)
-    heatmap_data = data.pivot("skill_name", "job_title", "count").fillna(0)
-    fig, ax = plt.subplots(figsize=(10, 8))
-    sns.heatmap(heatmap_data, cmap="YlGnBu", ax=ax)
-    ax.set_title('Heatmap des Compétences par Poste')
-    st.pyplot(fig)
+    st.write(data)  # Debugging statement to inspect data
+    if 'skill_name' in data.columns and 'job_title' in data.columns and 'count' in data.columns:
+        heatmap_data = data.pivot(index="skill_name", columns="job_title", values="count").fillna(0)
+        fig, ax = plt.subplots(figsize=(10, 8))
+        sns.heatmap(heatmap_data, cmap="YlGnBu", ax=ax)
+        ax.set_title('Heatmap des Compétences par Poste')
+        st.pyplot(fig)
+    else:
+        st.error("Data format is incorrect. Please check the column names and ensure they match the expected format.")
 
 def interactive_timeline():
     timeline_data = fetch_data("""
@@ -163,7 +168,6 @@ def skill_network():
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
     st.plotly_chart(fig)
-
 
 def fetch_locations():
     data = {

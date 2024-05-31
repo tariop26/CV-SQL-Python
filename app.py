@@ -217,6 +217,3 @@ with tab3:
 with tab4:
     st.header('Carte des Lieux où J\'ai Travaillé')
     location_map()
-
-else:
-    st.error("Nom d'utilisateur ou mot de passe incorrect")

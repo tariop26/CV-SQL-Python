@@ -181,6 +181,15 @@ def skill_network():
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
     st.plotly_chart(fig)
+    st.markdown(
+            """
+            **Explication du Réseau de Compétences :**
+
+            Ce graphique montre un réseau de compétences basé sur les expériences professionnelles. Chaque nœud représente soit un poste occupé, soit une compétence acquise. Les lignes entre les nœuds indiquent quelles compétences ont été utilisées dans quels postes. 
+
+            Cela permet de visualiser les relations et les connexions entre les différentes compétences et les postes. Vous pouvez voir quelles compétences sont partagées entre plusieurs postes et identifier les compétences centrales qui jouent un rôle crucial dans plusieurs expériences professionnelles.
+            """
+        )
 
 def fetch_locations():
     data = {
@@ -255,6 +264,10 @@ def create_map(data):
     for _, row in data.iterrows():
         folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
     return m
+    st.markdown(
+            """
+            Quelques mois en Afrique, quelques années aux Etats-Unis et une bonne partie en Rhône-Alpes !"""
+        )
 
 st.set_page_config(layout="wide")
 st.title('CV de Manuel Poirat')

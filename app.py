@@ -214,6 +214,22 @@ def skill_progression():
         height=400
     )
 
+def employment_duration_histogram():
+    data = fetch_data("""
+        SELECT job_title, start_date, end_date
+        FROM experience
+    """)
+    data['start_date'] = pd.to_datetime(data['start_date'])
+    data['end_date'] = pd.to_datetime(data['end_date'])
+    data['duration'] = (data['end_date'] - data['start_date']).dt.days / 30  # Durée en mois
+
+    fig, ax = plt.subplots(figsize=(6, 4))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
+    sns.histplot(data['duration'], bins=10, kde=False, ax=ax)
+    ax.set_title("Histogramme des Durées d'Emploi")
+    ax.set_xlabel("Durée (mois)")
+    ax.set_ylabel("Nombre d'emplois")
+    st.pyplot(fig)
+
 def skills_venn_diagram():
     data = fetch_data("""
         SELECT e.job_title, es.skill_name
@@ -230,26 +246,20 @@ def skills_venn_diagram():
     job_titles = list(job_skills.keys())[:3]
     venn_data = [job_skills[job_titles[0]], job_skills[job_titles[1]], job_skills[job_titles[2]]]
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 4))  # Ajuster la taille (6 pouces en largeur, 4 en hauteur)
     venn = venn3([venn_data[0], venn_data[1], venn_data[2]], set_labels=(job_titles[0], job_titles[1], job_titles[2]))
     ax.set_title('Diagramme de Venn des Compétences Partagées')
-    st.pyplot(fig)
-    
-def employment_duration_histogram():
-    data = fetch_data("""
-        SELECT job_title, start_date, end_date
-        FROM experience
-    """)
-    data['start_date'] = pd.to_datetime(data['start_date'])
-    data['end_date'] = pd.to_datetime(data['end_date'])
-    data['duration'] = (data['end_date'] - data['start_date']).dt.days / 30  # Durée en mois
 
-    fig, ax = plt.subplots()
-    sns.histplot(data['duration'], bins=10, kde=False, ax=ax)
-    ax.set_title("Histogramme des Durées d'Emploi")
-    ax.set_xlabel("Durée (mois)")
-    ax.set_ylabel("Nombre d'emplois")
+    # Ajouter une légende claire
+    legend_text = f"""
+    {job_titles[0]}: {', '.join(job_skills[job_titles[0]])}
+    {job_titles[1]}: {', '.join(job_skills[job_titles[1]])}
+    {job_titles[2]}: {', '.join(job_skills[job_titles[2]])}
+    """
+    ax.text(-0.75, -0.75, legend_text, fontsize=10, ha='left', va='top', transform=ax.transAxes)
+
     st.pyplot(fig)
+
 
 def create_map(data):
     m = folium.Map(location=[20, 0], zoom_start=2)

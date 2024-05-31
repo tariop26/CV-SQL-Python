@@ -52,10 +52,12 @@ def interactive_timeline():
     fig = go.Figure()
     colors = {'Expérience': 'green', 'Formation': 'blue'}
 
+    y_positions = {'Expérience': 1, 'Formation': 0.8}  # Adjust the y-positions here
+
     for _, row in timeline_data.iterrows():
         fig.add_trace(go.Scatter(
             x=[row['start_date'], row['end_date']],
-            y=[row['type'], row['type']],
+            y=[y_positions[row['type']], y_positions[row['type']]],
             mode='lines+markers',
             line=dict(color=colors[row['type']], width=2),
             marker=dict(size=10),
@@ -64,14 +66,15 @@ def interactive_timeline():
         ))
 
     fig.update_layout(
-        title='',
+        title='Chronologie Interactive des Expériences et Formations',
         xaxis=dict(title='Date'),
-        yaxis=dict(title=''),
+        yaxis=dict(title='', showticklabels=False),
         showlegend=False,
         margin=dict(l=50, r=50, t=50, b=50),
         height=400
     )
     st.plotly_chart(fig)
+
 
 def generate_wordcloud():
     data = fetch_data("SELECT description FROM experience")

@@ -1,4 +1,8 @@
 import streamlit as st
+
+# Appeler st.set_page_config au tout début
+st.set_page_config(layout="wide")
+
 import sqlite3
 import pandas as pd
 import plotly.graph_objects as go
@@ -9,8 +13,6 @@ from streamlit_folium import st_folium
 import folium
 import altair as alt
 from auth import authenticate
-
-st.set_page_config(layout="wide")  # Appeler ceci au tout début du script
 
 def fetch_skills_for_item(item_id, item_type):
     conn = sqlite3.connect('cv_database.db')
@@ -237,7 +239,7 @@ with tab1:
     st.write(education_data, use_container_width=True)
 
 with tab2:
-    col1, col2, col3 = st.columns([2, 1, 2])  # Ajuster les largeurs des colonnes ici
+    col1, col2, col3 = st.columns([2, 0.1, 2])  # Ajuster les largeurs des colonnes ici
 
     with col1:
         st.header('Distribution des Compétences')

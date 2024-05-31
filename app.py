@@ -173,6 +173,37 @@ def create_map(data):
         folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
     return m
 
+def radar_chart():
+    skills = ['SQL', 'Power BI', 'Wordpress', 'Python', 'Excel', 'Autonomie', 'Travail en équipe', 'Management', 'Organisation de voyages']
+    proficiency = [70, 75, 80, 65, 90, 95, 90, 90, 95]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatterpolar(
+        r=proficiency,
+        theta=skills,
+        fill='toself',
+        name='Proficiency',
+        fillcolor='rgba(0, 191, 255, 0.2)',
+        line=dict(color='rgba(0, 191, 255, 1)')
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100]
+            )
+        ),
+        showlegend=False,
+        title="Radar des Compétences",
+        margin=dict(l=20, r=20, t=20, b=20),
+        paper_bgcolor='rgba(0, 0, 0, 0)',
+        plot_bgcolor='rgba(0, 0, 0, 0)'
+    )
+
+    st.plotly_chart(fig)
+
 st.set_page_config(layout="wide")
 col1, col2 = st.columns([4, 1])
 with col1:
@@ -196,13 +227,9 @@ tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Ca
 with tab1:
     st.header('Frise Chronologique des Expériences et Formations')
 
-    # Utilisation de colonnes pour ajouter la photo en haut à droite
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        interactive_timeline()
-    with col2:
-        st.image("avatar-cv-manuel-poirat.jpg", use_column_width=True)  # Remplacez par le chemin de votre image
-
+    # Utilisation de colonnes pour ajouter la photo
+    interactive_timeline()
+    
     st.header('Expériences')
     experience_data = fetch_data("SELECT id, job_title AS 'Titre du poste', company AS 'Entreprise', start_date AS 'Date de début', end_date AS 'Date de fin' FROM experience")
     experience_data['Compétences'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
@@ -210,22 +237,3 @@ with tab1:
 
     st.header('Formations')
     education_data = fetch_data("SELECT id, degree AS 'Diplôme', institution AS 'Institution', start_date AS 'Date de début', end_date AS 'Date de fin' FROM education")
-    education_data['Compétences'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
-    st.write(education_data, use_container_width=True)
-
-with tab2:
-    st.header('Distribution des Compétences')
-    skill_distribution()
-    st.header('Réseau de Compétences')
-    skill_network()
-
-with tab3:
-    st.header('Nuage de Mots des Descriptions de Poste')
-    generate_wordcloud()
-
-with tab4:
-    st.header('Carte des Lieux où j\'ai Travaillé')
-    
-    location_data = fetch_locations()
-    map_ = create_map(location_data)
-    st_folium(map_, width=1200, height=800)

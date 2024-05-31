@@ -145,26 +145,25 @@ def skill_network():
                         title='Réseau de Compétences',
                         showlegend=False,
                         hovermode='closest',
-                        margin=dict(b=20,l=5,r=5,t=40),
+                        margin=dict(b=20, l=5, r=5, t=40),
                         height=800,  # Augmenter la hauteur ici
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
     st.plotly_chart(fig)
 
-
 def fetch_locations():
-        data = {
-            "Lieu": ["Voiron, France", "Denver, Colorado, USA", "Drôme, France", "Font-Romeu, France", "Divonne-les-Bains, France", "Lyon, France", "Tanzanie", "Afrique du Sud", "Mâcon, France", "Courchevel, France"],
-            "Latitude": [45.367, 39.7392, 44.7631, 42.5037, 46.356, 45.764, -6.369, -30.5595, 46.306, 45.414],
-            "Longitude": [5.5788, -104.9903, 5.424, 1.982, 6.139, 4.835, 34.8888, 22.9375, 4.830, 6.631]
-        }
-        return pd.DataFrame(data)
-    
-    def create_map(data):
-        m = folium.Map(location=[20, 0], zoom_start=2)
-        for _, row in data.iterrows():
-            folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
-        return m
+    data = {
+        "Lieu": ["Voiron, France", "Denver, Colorado, USA", "Drôme, France", "Font-Romeu, France", "Divonne-les-Bains, France", "Lyon, France", "Tanzanie", "Afrique du Sud", "Mâcon, France", "Courchevel, France"],
+        "Latitude": [45.367, 39.7392, 44.7631, 42.5037, 46.356, 45.764, -6.369, -30.5595, 46.306, 45.414],
+        "Longitude": [5.5788, -104.9903, 5.424, 1.982, 6.139, 4.835, 34.8888, 22.9375, 4.830, 6.631]
+    }
+    return pd.DataFrame(data)
+
+def create_map(data):
+    m = folium.Map(location=[20, 0], zoom_start=2)
+    for _, row in data.iterrows():
+        folium.Marker(location=[row['Latitude'], row['Longitude']], popup=row['Lieu']).add_to(m)
+    return m
 
 st.set_page_config(layout="wide")
 st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
@@ -211,12 +210,3 @@ with tab4:
     location_data = fetch_locations()
     map_ = create_map(location_data)
     st_folium(map_, width=700, height=500)
-
-
-
-
-
-
-
-
-

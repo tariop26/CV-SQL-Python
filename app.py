@@ -271,7 +271,7 @@ def create_map(data):
 
 st.set_page_config(layout="wide")
 st.title('CV de Manuel Poirat')
-st.markdown("[Télécharger mon CV au format PDF](https://tariop26.github.io/)")
+st.markdown("[Voir mon CV "classique"](https://tariop26.github.io/)")
 # Suppression de la barre de navigation
 st.markdown(
     """

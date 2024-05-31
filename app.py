@@ -38,7 +38,7 @@ def skill_distribution():
         x='count:Q',
         y=alt.Y('skill_name:N', sort='-x')
     ).properties(
-        title='Distribution des Compétences'
+        title=''
     )
     st.altair_chart(fig, use_container_width=True)
 
@@ -65,7 +65,7 @@ def interactive_timeline():
         ))
 
     fig.update_layout(
-        title='Chronologie Interactive des Expériences et Formations',
+        title='',
         xaxis=dict(title='Date'),
         yaxis=dict(title='', tickvals=['Expérience', 'Formation']),
         showlegend=False,
@@ -109,7 +109,7 @@ def radar_chart():
         plot_bgcolor='rgba(0,0,0,0)',  # Rendre le fond de la zone de traçage transparent
         paper_bgcolor='rgba(0,0,0,0)',  # Rendre le fond du papier transparent
         showlegend=False,
-        title="Compétences et leur Niveau de Maîtrise (%)"
+        title=""
     )
 
     st.plotly_chart(fig)
@@ -162,7 +162,7 @@ def skill_network():
             size=10,
             colorbar=dict(
                 thickness=15,
-                title='Connexions de Nœuds',  # Mettre à jour le titre ici
+                title='Les relations inter-compétences',  # Mettre à jour le titre ici
                 xanchor='left',
                 titleside='right'
             ),
@@ -171,7 +171,7 @@ def skill_network():
 
     fig = go.Figure(data=[edge_trace, node_trace],
                     layout=go.Layout(
-                        title='Réseau de Compétences',
+                        title='',
                         showlegend=False,
                         hovermode='closest',
                         margin=dict(b=20,l=5,r=5,t=40),
@@ -187,6 +187,55 @@ def fetch_locations():
         "Longitude": [5.5788, -104.9903, 5.424, 1.982, 6.139, 4.835, 34.8888, 22.9375, 4.830, 6.631]
     }
     return pd.DataFrame(data)
+
+def skill_progression():
+    progression_data = fetch_data("""
+        SELECT skill_name, date, proficiency
+        FROM skill_progression
+        ORDER BY date
+    """)
+    fig = go.Figure()
+
+    for skill in progression_data['skill_name'].unique():
+        skill_data = progression_data[progression_data['skill_name'] == skill]
+        fig.add_trace(go.Scatter(
+            x=skill_data['date'],
+            y=skill_data['proficiency'],
+            mode='lines+markers',
+            name=skill
+        ))
+
+    fig.update_layout(
+        title='Progression des compétences',
+        xaxis=dict(title='Date'),
+        yaxis=dict(title='Proficiency'),
+        height=400
+    )
+    st.plotly_chart(fig)
+
+def project_distribution():
+    project_data = fetch_data("""
+        SELECT project_type, COUNT(*) as count
+        FROM projects
+        GROUP BY project_type
+    """)
+    fig = alt.Chart(project_data).mark_bar().encode(
+        x='count:Q',
+        y=alt.Y('project_type:N', sort='-x')
+    ).properties(
+        title='Répartition des Projets par Type'
+    )
+    st.altair_chart(fig, use_container_width=True)
+
+def create_work_study_map():
+    location_data = fetch_data("""
+        SELECT location_name, latitude, longitude
+        FROM work_study_locations
+    """)
+    m = folium.Map(location=[45.764, 4.8357], zoom_start=6)
+    for _, row in location_data.iterrows():
+        folium.Marker(location=[row['latitude'], row['longitude']], popup=row['location_name']).add_to(m)
+    return m
 
 def top_skills_over_time():
     data = fetch_data("""
@@ -226,7 +275,7 @@ def create_map(data):
     return m
 
 st.set_page_config(layout="wide")
-st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
+st.title('CV de Manuel Poirat')
 # Suppression de la barre de navigation
 st.markdown(
     """
@@ -238,10 +287,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Top Skills Over Time", "Carte"])
+tab1, tab2, tab3, tab4 = st.tabs(["Mes expériences", "Mes compétences", "Top Skills Over Time", "Carte"])
 
 with tab1:
-    st.header('Frise Chronologique des Expériences et Formations')
+    st.header('Mes expériences et formations au fil du temps')
     interactive_timeline()
     
     st.header('Expériences')
@@ -255,11 +304,11 @@ with tab1:
     st.write(education_data, use_container_width=True)
 
 with tab2:
-    st.header('Distribution des Compétences')
+    st.header('Un professionnel aux multiples talents')
     col1, col2, col3 = st.columns([1, 0.1, 1])
     
     with col1:
-        st.subheader('Distribution des Compétences')
+        st.subheader('Répartition de mes compétences en année de pratique')
         skill_distribution()
     
     with col3:
@@ -270,8 +319,8 @@ with tab2:
     skill_network()
 
 with tab3:
-    st.header('Analyse des Compétences')
-    top_skills_over_time()
+    st.header('Répartition des Projets par Type')
+    project_distribution()
 
 with tab4:
     st.header('Carte des Lieux où j\'ai Travaillé')

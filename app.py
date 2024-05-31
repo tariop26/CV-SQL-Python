@@ -52,7 +52,7 @@ def interactive_timeline():
     fig = go.Figure()
     colors = {'Expérience': 'green', 'Formation': 'blue'}
 
-    y_positions = {'Expérience': 1, 'Formation': 0.8}  # Adjust the y-positions here
+    y_positions = {'Expérience': 0.7, 'Formation': 0.8}  # Adjust the y-positions here
 
     for _, row in timeline_data.iterrows():
         fig.add_trace(go.Scatter(

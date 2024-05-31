@@ -148,7 +148,6 @@ def skill_network():
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
     st.plotly_chart(fig)
 
-
 def location_map():
     data = fetch_data("SELECT company, job_title, description FROM experience")
     locations = {
@@ -172,48 +171,41 @@ def location_map():
 
 st.set_page_config(layout="wide")
 st.title('CV de Manuel Poirat - Formations et expériences professionnelles')
-st.sidebar.title('Navigation')
+# Suppression de la barre de navigation
+st.markdown(
+    """
+    <style>
+    .css-18e3th9 { visibility: hidden; }
+    .css-1d391kg { visibility: hidden; }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 tab1, tab2, tab3, tab4 = st.tabs(["Accueil", "Compétences", "Descriptions", "Carte"])
 
-# Onglet 1: Chronologie interactive et tableaux récapitulatifs
 with tab1:
     st.header('Frise Chronologique des Expériences et Formations')
     interactive_timeline()
-
     st.header('Expériences')
-    try:
-        experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date, description FROM experience")
-        experience_data['skills'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
-        st.write(experience_data)
-    except Exception as e:
-        st.error(f"Erreur lors de l'affichage des expériences : {e}")
+    experience_data = fetch_data("SELECT id, job_title, company, start_date, end_date FROM experience")
+    experience_data['skills'] = experience_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'experience')))
+    st.write(experience_data)
 
     st.header('Formations')
-    try:
-        education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date, description FROM education")
-        education_data['skills'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
-        st.write(education_data)
-    except Exception as e:
-        st.error(f"Erreur lors de l'affichage des formations : {e}")
+    education_data = fetch_data("SELECT id, degree AS job_title, institution AS company, start_date, end_date FROM education")
+    education_data['skills'] = education_data['id'].apply(lambda x: ', '.join(fetch_skills_for_item(x, 'education')))
+    st.write(education_data)
 
-# Onglet 2: Compétences
 with tab2:
     st.header('Distribution des Compétences')
     skill_distribution()
-    
     st.header('Réseau de Compétences')
     skill_network()
 
-# Onglet 3: Descriptions
 with tab3:
-    st.header('Nuage de Mots des Descriptions de Postes')
+    st.header('Nuage de Mots des Descriptions de Poste')
     generate_wordcloud()
 
-    st.header('Heatmap des Compétences')
-    # Remplacez ceci par la fonction appropriée pour générer une heatmap des compétences
-    st.write("Heatmap des compétences à implémenter")
-
-# Onglet 4: Carte des Lieux où J'ai Travaillé
 with tab4:
-    st.header('Carte des Lieux où J\'ai Travaillé')
     location_map()
